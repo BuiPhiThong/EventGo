@@ -4,7 +4,6 @@ var userSchema = new mongoose.Schema({
     name:{
         type:String,
         required:true,
-        unique:true,
     },
     email:{
         type:String,
@@ -23,14 +22,14 @@ var userSchema = new mongoose.Schema({
         enum: ["User", "Admin", "Organizer"],
         default: "User",
     },
-    refreshToken: { type: String },
-    passwordChangeAt: { type: String },
-    passwordResetToken: { type: String },
-    passwordResetExpire: { type: String },
+    eventsAttended: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }],
     deleted: { type: Number, default: 0 },
+    // refreshToken: { type: String },
+    // passwordChangeAt: { type: String },
+    // passwordResetToken: { type: String },
+    // passwordResetExpire: { type: String },
 
     // Danh sách sự kiện đã tham gia
-    eventsAttended: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }]
 
 }, { timestamps: true });
 
