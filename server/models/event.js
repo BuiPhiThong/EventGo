@@ -1,5 +1,6 @@
 const mongoose = require("mongoose"); // Erase if already required
 
+
 var eventSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -10,24 +11,27 @@ var eventSchema = new mongoose.Schema(
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required:true
     },
-    views:{
-        type:Number,
-        default:0
+    organizerUnit: {
+      name: { type: String}, // Tên đơn vị tổ chức
+      address: { type: String },               // Địa chỉ của đơn vị tổ chức (tùy chọn)
+      contactInfo: {
+        phone: { type: String },               // Số điện thoại liên lạc của đơn vị
+        email: { type: String },               // Email liên lạc của đơn vị
+      },
     },
+    views: { type: Number, default: 0 },
     capacity: { type: Number, required: true },
-    price: { type: Number, default: 0 }, // 0 if free
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    category: { type: String, required: true },
-    imageUrl: { type: String },
+    backgroundImage: { type: String },
+    logoImage: { type: String},
     status: {
       type: String,
       enum: ["upcoming", "ongoing", "completed", "cancelled"],
       default: "upcoming",
     },
     sponsors: [{ name: String, logoUrl: String }],
-    speakers: [{ name: String, bio: String, photoUrl: String }],
     schedule: [
       {
         time: String,
@@ -38,5 +42,4 @@ var eventSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model("Event", eventSchema);
