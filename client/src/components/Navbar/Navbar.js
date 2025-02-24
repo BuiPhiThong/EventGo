@@ -5,6 +5,7 @@ import "../../styletemplate/css/magnific-popup.css";
 import "../../styletemplate/css/style.css";
 import "../../styletemplate/css/bootstrap.min.css";
 import "../../styletemplate/css/font-awesome.min.css";
+import {LuLogIn} from '../../ultils/icon'
 
 const Navbar = () => {
   return (
@@ -13,7 +14,7 @@ const Navbar = () => {
         <div className="container">
           <div className="logo">
             <a href="./index.html">
-              <img src="http://127.0.0.1:5500/img/logo.png" alt="" />
+              <img src="https://ticketgo.vn/images/ticketgo/logo3.png" alt="" style={{height:'50px'}}/>
             </a>
           </div>
           <div className="nav-menu">
@@ -23,7 +24,7 @@ const Navbar = () => {
                   <a href="/">Home</a>
                 </li>
                 <li>
-                  <a href="./about-us.html">About</a>
+                  <a href="#">About</a>
                 </li>
                 <li>
                   <a href="/speaker">Speakers</a>
@@ -43,18 +44,18 @@ const Navbar = () => {
                   </ul>
                 </li>
                 <li>
-                  <a href="./schedule.html">Schedule</a>
+                  <a href="#">Schedule</a>
                 </li>
                 <li>
                   <a href="/event">Event</a>
                 </li>
                 <li>
-                  <a href="./contact.html">Contacts</a>
+                  <a href="#">Contacts</a>
                 </li>
               </ul>
             </nav>
-            <a href="#" className="primary-btn top-btn">
-              <i className="fa fa-ticket" /> Ticket
+            <a href="/login" className="primary-btn top-btn">
+              <LuLogIn/> Login
             </a>
           </div>
           <div id="mobile-menu-wrap" />

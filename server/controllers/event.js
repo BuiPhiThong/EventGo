@@ -38,7 +38,7 @@ const createEvent = asyncHandler(async (req, res) => {
 
 const updateEvent = asyncHandler(async (req, res) => {
   const { eid } = req.params;
-  const { title, description, date, location, capacity, organizerUnit } =
+  const { title, description, date, location, capacity, organizerUnit ,category} =
     req.body;
 
   const event = await Event.findById(eid);
@@ -54,7 +54,7 @@ const updateEvent = asyncHandler(async (req, res) => {
   event.date = date ? new Date(date) : event.date;
   event.location = location || event.location;
   event.capacity = capacity || event.capacity;
-
+  event.category = category || event.category
   if (organizerUnit) {
     const { name, address, contactInfo } = req.body.organizerUnit;
     const { phone, email } = contactInfo;
