@@ -2,7 +2,7 @@ import "./index.css";
 import { Routes, Route } from "react-router-dom";
 import { Home, Public, Login } from "./pages/public";
 import path from "./ultils/path";
-import { Speaker,Event } from "./components";
+import { Speaker,Event, DetailEvent } from "./components";
 
 function App() {
   return (
@@ -12,6 +12,7 @@ function App() {
           <Route path={path.HOME} element={<Home />} />
           <Route path={path.SPEAKER} element={<Speaker />} />
           <Route path={path.Event} element={<Event/>} />
+          <Route path={path.DetailEvent} element={<DetailEvent/>} />
         </Route>
           <Route path={path.LOGIN} element={<Login />} />
       </Routes>

@@ -114,7 +114,7 @@ const eventRegistration = asyncHandler(async (req, res) => {
   });
 });
 
-  const cancellEvent = asyncHandler(async(req,res)=>{
+const cancellEvent = asyncHandler(async(req,res)=>{
     const {eid} = req.body
     const {_id} = req.user
 
@@ -129,7 +129,7 @@ const eventRegistration = asyncHandler(async (req, res) => {
       success:true,
       mess:'Hủy thành công'
     })
-  })
+})
 
 // const createUser = async (req, res) => {
 //     try {

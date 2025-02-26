@@ -27,6 +27,7 @@ var userSchema = new mongoose.Schema(
         },
       },
     ],
+    
     deleted: { type: Number, default: 0 },
     refreshToken: { type: String },
     passwordChangeAt: { type: String },

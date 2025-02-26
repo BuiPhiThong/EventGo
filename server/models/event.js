@@ -36,10 +36,11 @@ var eventSchema = new mongoose.Schema(
         "Business",
         "Design",
         "Education",
+
         "Science",
         "Health",
         "Entertainment",
-        "Other",
+        "Cuisine",
       ],
     },
     views: { type: Number, default: 0 },

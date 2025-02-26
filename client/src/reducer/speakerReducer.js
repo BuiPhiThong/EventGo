@@ -4,7 +4,6 @@ import { apiGetAllSpeaker } from '../apis/speaker/speaker'
 export const fetchDataSpeaker = createAsyncThunk(
     'getallspeaker',async () =>{
         const response = await apiGetAllSpeaker()
-        console.log(response);
         return response        
     }
 )

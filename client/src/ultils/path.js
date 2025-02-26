@@ -4,7 +4,8 @@ const path={
     ALL:'*',
     LOGIN:'/login',
     SPEAKER:'/speaker',
-    Event:'/event'
+    Event:'/event',
+    DetailEvent:'/detailevent/:eid'
 }
 
 

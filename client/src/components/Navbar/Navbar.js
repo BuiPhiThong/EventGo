@@ -5,16 +5,32 @@ import "../../styletemplate/css/magnific-popup.css";
 import "../../styletemplate/css/style.css";
 import "../../styletemplate/css/bootstrap.min.css";
 import "../../styletemplate/css/font-awesome.min.css";
-import {LuLogIn} from '../../ultils/icon'
+import { LuLogIn } from "../../ultils/icon";
+
+import { useState, useEffect } from "react";
+import { fetchDataSpeaker } from "../../reducer/speakerReducer";
+import { useDispatch, useSelector } from "react-redux";
 
 const Navbar = () => {
+  const dispatch = useDispatch();
+  const { isLoading, error, dataSpeakerAll } = useSelector(
+    (state) => state.speakerList
+  );
+  useEffect(() => {
+    dispatch(fetchDataSpeaker());
+  }, [dispatch]);
+
   return (
     <div>
       <header className="header-section">
         <div className="container">
           <div className="logo">
-            <a href="./index.html">
-              <img src="https://ticketgo.vn/images/ticketgo/logo3.png" alt="" style={{height:'50px'}}/>
+            <a href="/">
+              <img
+                src="https://ticketgo.vn/images/ticketgo/logo3.png"
+                alt=""
+                style={{ height: "50px" }}
+              />
             </a>
           </div>
           <div className="nav-menu">
@@ -29,18 +45,11 @@ const Navbar = () => {
                 <li>
                   <a href="/speaker">Speakers</a>
                   <ul className="dropdown">
-                    <li>
-                      <a href="#">Jayden</a>
-                    </li>
-                    <li>
-                      <a href="#">Sara</a>
-                    </li>
-                    <li>
-                      <a href="#">Emma</a>
-                    </li>
-                    <li>
-                      <a href="#">Harriet</a>
-                    </li>
+                    {dataSpeakerAll?.map((item, index) => (
+                      <li>
+                        <a href="/speaker">{item?.name}</a>
+                      </li>
+                    ))}
                   </ul>
                 </li>
                 <li>
@@ -55,14 +64,12 @@ const Navbar = () => {
               </ul>
             </nav>
             <a href="/login" className="primary-btn top-btn">
-              <LuLogIn/> Login
+              <LuLogIn /> Login
             </a>
           </div>
           <div id="mobile-menu-wrap" />
         </div>
       </header>
-
-     
     </div>
   );
 };

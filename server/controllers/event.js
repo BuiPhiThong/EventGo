@@ -1,6 +1,6 @@
 const Event = require("../models/event");
 const User = require("../models/user");
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 
 const createEvent = asyncHandler(async (req, res) => {
@@ -36,11 +36,56 @@ const createEvent = asyncHandler(async (req, res) => {
   });
 });
 
+const createManyEvent = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+
+  const { events } = req.body;
+
+  if (!Array.isArray(events) || events.length === 0) {
+    throw new Error("Events must be a non-empty array");
+  }
+  const formateEvent = events.map((event) => {
+    const { title, description, location, date, capacity } = event;
+    if (!title || !description || !location || !date || !capacity) {
+      throw new Error("Missing input to insert many event");
+    }
+
+    const formatDate = new Date(date);
+    if (isNaN(formatDate.getTime())) {
+      throw new Error("Invalid date format");
+    }
+
+    return {
+      ...event,
+      date: formatDate,
+      organizer: _id,
+    };
+  });
+  const response = await Event.insertMany(formateEvent);
+
+  return res.status(200).json({
+    success: response.length > 0 ? true : false,
+    message:
+      response.length > 0
+        ? `${response.length} events created successfully`
+        : "Failed to create events",
+    events: response,
+  });
+});
+
 const updateEvent = asyncHandler(async (req, res) => {
   const { eid } = req.params;
-  const { title, description, date, location, capacity, organizerUnit ,category} =
-    req.body;
-
+  const {
+    title,
+    description,
+    date,
+    location,
+    capacity,
+    organizerUnit,
+    category,
+    speakerIds
+  } = req.body;
+  
   const event = await Event.findById(eid);
   if (!event) {
     return res.status(404).json({
@@ -54,7 +99,7 @@ const updateEvent = asyncHandler(async (req, res) => {
   event.date = date ? new Date(date) : event.date;
   event.location = location || event.location;
   event.capacity = capacity || event.capacity;
-  event.category = category || event.category
+  event.category = category || event.category;
   if (organizerUnit) {
     const { name, address, contactInfo } = req.body.organizerUnit;
     const { phone, email } = contactInfo;
@@ -67,7 +112,19 @@ const updateEvent = asyncHandler(async (req, res) => {
       },
     };
   }
-
+  
+  if(speakerIds){
+    const newSpeaker = speakerIds?.filter((el)=>!event?.speaker?.some((item)=>item.toString()===el))
+  
+    if(newSpeaker.length >0){
+      event.speaker.push(...newSpeaker);//...speaker để tránh bị push mảng lồng vào mảng
+    }else{
+      return res.status(400).json({
+        success:false,
+        mess:'All speaker has been existed'
+      })
+    }
+  }
   const updateEvent = await event.save();
   return res.status(200).json({
     success: true,
@@ -129,28 +186,28 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
   });
 });
 
-
 const updateStatus = asyncHandler(async (req, res) => {
-  const {eid } = req.params
-  const { uid, statusEvent} = req.body;
+  const { eid } = req.params;
+  const { uid, statusEvent } = req.body;
 
   // Kiểm tra xem uid và eid có phải là ObjectId hợp lệ không
-  if (!mongoose.Types.ObjectId.isValid(uid) || !mongoose.Types.ObjectId.isValid(eid)) {
+  if (
+    !mongoose.Types.ObjectId.isValid(uid) ||
+    !mongoose.Types.ObjectId.isValid(eid)
+  ) {
     return res.status(400).json({
       success: false,
       mess: "Invalid uid or eid. Must be a valid ObjectId.",
     });
   }
 
-  // Cập nhật trạng thái sự kiện
   const updatedStatusEvent = await User.findOneAndUpdate(
     { _id: uid, "eventsAttended.event": eid },
     { $set: { "eventsAttended.$.status": statusEvent } },
     { new: true }
   );
-  
+
   if (!updatedStatusEvent) {
-    console.log("User or event not found");
     return res.status(404).json({
       success: false,
       mess: "User or event not found",
@@ -164,6 +221,111 @@ const updateStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const getEventByCategoryLeft = asyncHandler(async (req, res) => {
+  
+  const technologyEvent = await Event.find({ category: "Technology" }).sort("-date").limit(1);
+  const businessEvent = await Event.find({ category: "Business" }).sort("-date").limit(1);
+  const designEvent = await Event.find({ category: "Design" }).sort("-date").limit(1);
+  const educationEvent = await Event.find({ category: "Education" }).sort("-date").limit(1);
+
+  // Ghép kết quả lại thành mảng
+  const result = [...technologyEvent, ...businessEvent, ...designEvent, ...educationEvent];
+  
+  return res.status(200).json({
+    success: result.length === 4, 
+    length: result.length,
+    mess: result,
+  });
+});
+
+const getEventByCategoryRight = asyncHandler(async (req, res) => {
+  const categories = ["Science", "Health", "Entertainment", "Cuisine"];
+  
+  // Lấy sự kiện cho mỗi danh mục
+  const scienceEvent = await Event.find({ category: "Science" }).sort("-date").limit(1);
+  const healthEvent = await Event.find({ category: "Health" }).sort("-date").limit(1);
+  const entertainmentEvent = await Event.find({ category: "Entertainment" }).sort("-date").limit(1);
+  const cuisineEvent = await Event.find({ category: "Cuisine" }).sort("-date").limit(1);
+
+  // Ghép kết quả lại thành mảng
+  const result = [...scienceEvent, ...healthEvent, ...entertainmentEvent, ...cuisineEvent];
+
+  // Trả về kết quả
+  return res.status(200).json({
+    success: result.length === 4,  // Kiểm tra có đủ 4 sự kiện không
+    length: result.length,
+    mess: result,
+  });
+});
+
+const getEventById = asyncHandler(async(req,res)=>{
+  const {eid} = req.params
+
+  const response = await Event.findById(eid).populate('speaker','name')
+
+  return res.status(200).json({
+    success: response ? true : false,
+    mess:response ? response :'Can not found Event!!!'
+  })
+})
+
+const getEventByCategoryName = asyncHandler(async(req,res)=>{
+  const {category} = req.query
+  const response = await Event.find({category:category}).populate('speaker','name')
+
+  return res.status(200).json({
+    success: response ? true : false,
+    mess:response ? response :'Can not found Event!!!'
+  })
+})
+
+// const getEventByCategoryLeft = asyncHandler(async (req, res) => {
+//   const { page = 1, limit = 4 } = req.query;
+
+//   const events = await Event.find({ category: { $in: ["Technology", "Business", "Design", "Education"] } })
+//     .sort("-date")
+//     .skip((page - 1) * limit)
+//     .limit(parseInt(limit));
+
+//   return res.status(200).json({
+//     success: true,
+//     page: parseInt(page),
+//     length: events.length,
+//     mess: events,
+//   });
+// });
+
+// const getEventByCategoryRight = asyncHandler(async (req, res) => {
+//   const { page = 1, limit = 4 } = req.query;
+
+//   const events = await Event.find({ category: { $in: ["Science", "Health", "Entertainment", "Cuisine"] } })
+//     .sort("-date")
+//     .skip((page - 1) * limit)
+//     .limit(parseInt(limit));
+
+//   return res.status(200).json({
+//     success: true,
+//     page: parseInt(page),
+//     length: events.length,
+//     mess: events,
+//   });
+// });
+
+
+
+// const getEventByCategoryRight = asyncHandler(async (req, res) => {
+//   const field = ["Science", "Health", "Entertainment", "Cuisine"];
+
+//   const result = await Event.find({ category: { $in: field } }).sort("-date");
+
+//   return res.status(200).json({
+//     success: result ? true : false,
+//     length: result.length,
+//     mess: result,
+//   });
+// });
+
+
 
 module.exports = {
   createEvent,
@@ -171,5 +333,10 @@ module.exports = {
   deleteEvent,
   listAllEvent,
   listUserRegisEvent,
-  updateStatus
+  updateStatus,
+  getEventByCategoryLeft,
+  getEventByCategoryRight,
+  createManyEvent,
+  getEventById,
+  getEventByCategoryName
 };
