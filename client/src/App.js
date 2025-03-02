@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { Home, Public, Login } from "./pages/public";
 import path from "./ultils/path";
 import { Speaker,Event, DetailEvent } from "./components";
+import FinalRegister from "./pages/guest/FinalRegister";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path={path.DetailEvent} element={<DetailEvent/>} />
         </Route>
           <Route path={path.LOGIN} element={<Login />} />
+          <Route path={path.FinalRegister} element={<FinalRegister/>}/>
       </Routes>
     </div>
   );

@@ -8,11 +8,9 @@ const Speaker = () => {
   const { isLoading, error, dataSpeakerAll } = useSelector(
     (state) => state.speakerList
   );
-  useEffect(() => {
+  useEffect(() => {    
     dispatch(fetchDataSpeaker());
   }, [dispatch]);
-
-  console.log(dataSpeakerAll);
 
   return (
     <div>

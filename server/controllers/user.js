@@ -1,9 +1,12 @@
 const User = require("../models/user");
-const Event = require('../models/event')
+const Event = require("../models/event");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const { genAccessToken, genRefreshToken } = require("../middlewares/jwt");
 const cookie = require("cookie-parser");
+const sendMail = require("../ultils/sendMail");
+const TempRegister = require("../models/tempoRegistation");
+const uniqid = require("uniqid");
 
 const createUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -13,6 +16,11 @@ const createUser = asyncHandler(async (req, res) => {
       mess: "Missing input to create user",
     });
   }
+  const currentTime = new Date();
+  await TempRegister.deleteMany({
+    createdAt: { $lt: new Date(currentTime.getTime() - 3 * 60 * 1000) },
+  });
+
   const existedEmail = await User.findOne({ email: email });
   if (existedEmail) {
     return res.status(409).json({
@@ -20,15 +28,87 @@ const createUser = asyncHandler(async (req, res) => {
       mess: "Email has been existed",
     });
   }
-  const user = await User.create(req.body);
-  return res.status(200).json({
-    success: user ? true : false,
-    mess: "Create SuccessFully",
+  const regisToken = uniqid(); // Tạo token duy nhất
+  const temRegis = {
+    name: name,
+    email: email,
+    password: password,
+    regisToken: regisToken,
+  };
+
+  const existedEmailTemp = await TempRegister.findOne({ email: email });
+
+  if (existedEmailTemp) {
+    return res.status(409).json({
+      success: false,
+      mess: "Please verify to register before link expired",
+    });
+  }
+  const html = `Xin chào ${name} ,để hoàn tất quá trình đăng kí tài khoản của bạn, vui lòng ấn vào link sau.Link hết hạn trong 3 phút
+  : <a href="${process.env.URL_CLIENT}/finalRegister/${regisToken}">Click here</a>`;
+
+  await sendMail({
+    email,
+    html,
+    subject: "Email Verification",
   });
+  await TempRegister.create(temRegis);
+
+  return res.status(200).json({
+    success: true,
+    mess: "Send Mail to create SuccessFully",
+  });
+});
+
+const finalRegister = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  const infoUser = await TempRegister.findOne({
+    regisToken: token,
+  });
+  if (!infoUser) {
+    return res.status(400).json({
+      success: false,
+      mess: "Invalid or expried token",
+    });
+  }
+  const currentTime = new Date();
+  if (currentTime > infoUser.createdAt.getTime() + 3 * 60 * 1000) {
+    await TempRegister.deleteOne({
+      regisToken: token,
+    });
+    return res.status(400).json({
+      success: false,
+      mess: "Token has expired",
+    });
+  }
+  const user = await User.create({
+    name: infoUser?.name,
+    email: infoUser?.email,
+    password: infoUser?.password,
+  });
+
+  console.log(user);
+
+  await TempRegister.deleteOne({
+    regisToken: token,
+  });
+  if (user) {
+    return res.status(200).json({
+      success: true,
+      message: "Account verified successfully!",
+    });
+  } else {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create user. Please try again.",
+    });
+  }
 });
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     throw new Error("Missing input");
   }
@@ -94,42 +174,45 @@ const eventRegistration = asyncHandler(async (req, res) => {
   if (!event) {
     return res.status(404).json({
       success: false,
-      message: "Event not found"
+      message: "Event not found",
     });
   }
 
-  const eventRegisted = user.eventsAttended.find((el)=>el?.event.toString() === eventId)
-  
-  if(eventRegisted){
-    throw new Error('You have registered for this event')
+  const eventRegisted = user.eventsAttended.find(
+    (el) => el?.event.toString() === eventId
+  );
+
+  if (eventRegisted) {
+    throw new Error("You have registered for this event");
   }
-  user.eventsAttended.push({event:eventId})
-  event.attendees.push(_id)
-  await event.save()
-  const userRegisted = await user.save()
+  user.eventsAttended.push({ event: eventId });
+  event.attendees.push(_id);
+  await event.save();
+  const userRegisted = await user.save();
   return res.status(200).json({
     success: true,
     message: "Event registered successfully",
-    data: userRegisted
+    data: userRegisted,
   });
 });
 
-const cancellEvent = asyncHandler(async(req,res)=>{
-    const {eid} = req.body
-    const {_id} = req.user
+const cancellEvent = asyncHandler(async (req, res) => {
+  const { eid } = req.body;
+  const { _id } = req.user;
 
+  const user = await User.findById(_id);
+  const filterRegisEvent = user?.eventsAttended.filter(
+    (item) => item.event.toString() !== eid
+  );
 
-    const user = await User.findById(_id)
-    const filterRegisEvent = user?.eventsAttended.filter((item)=>item.event.toString() !== eid)
+  user.eventsAttended = filterRegisEvent;
+  await user.save();
 
-    user.eventsAttended = filterRegisEvent
-    await user.save()
-
-    return res.status(200).json({
-      success:true,
-      mess:'Hủy thành công'
-    })
-})
+  return res.status(200).json({
+    success: true,
+    mess: "Hủy thành công",
+  });
+});
 
 // const createUser = async (req, res) => {
 //     try {
@@ -159,8 +242,9 @@ const cancellEvent = asyncHandler(async(req,res)=>{
 // }
 module.exports = {
   createUser,
+  finalRegister,
   login,
   getCurrent,
   eventRegistration,
-  cancellEvent
+  cancellEvent,
 };

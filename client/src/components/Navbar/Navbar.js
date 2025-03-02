@@ -10,16 +10,42 @@ import { LuLogIn } from "../../ultils/icon";
 import { useState, useEffect } from "react";
 import { fetchDataSpeaker } from "../../reducer/speakerReducer";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { fetchCurrentData, fetCurrentData } from "../../reducer/authenReducer";
 
 const Navbar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const authData = JSON.parse(localStorage.getItem("authData")) || {};
+  const isLogged = authData?.isLogin || false;
+  const accessToken = authData?.accessToken || "";
   const { isLoading, error, dataSpeakerAll } = useSelector(
     (state) => state.speakerList
   );
+  const { user, errorUser, isLoadingUser } = useSelector(
+    (state) => state.authen
+  );
+  useEffect(() => {
+    if (isLogged && accessToken) {
+      
+      dispatch(fetchCurrentData());
+    }
+  }, [dispatch, isLogged, accessToken]);
   useEffect(() => {
     dispatch(fetchDataSpeaker());
   }, [dispatch]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("authData");
+    navigate("/");
+  };
+
+  const handleSelectDropdownChange = (e) => {
+    const value = e.target.value;
+    if (value === "logout") {
+      handleLogout();
+    }
+  };
   return (
     <div>
       <header className="header-section">
@@ -46,7 +72,7 @@ const Navbar = () => {
                   <a href="/speaker">Speakers</a>
                   <ul className="dropdown">
                     {dataSpeakerAll?.map((item, index) => (
-                      <li>
+                      <li key={index}>
                         <a href="/speaker">{item?.name}</a>
                       </li>
                     ))}
@@ -63,10 +89,24 @@ const Navbar = () => {
                 </li>
               </ul>
             </nav>
-            <a href="/login" className="primary-btn top-btn">
-              <LuLogIn /> Login
-            </a>
+            {isLogged ? (
+              <select
+                className="primary-btn top-btn"
+                onChange={handleSelectDropdownChange}
+                aria-label="User Menu"
+              >
+                <option selected>Hello {user?.name}</option>
+                <option value="profile">Profile</option>
+                <option value="setting">Settings</option>
+                <option value="logout">Logout</option>
+              </select>
+            ) : (
+              <a href="/login" className="primary-btn top-btn">
+                <LuLogIn /> Login
+              </a>
+            )}
           </div>
+
           <div id="mobile-menu-wrap" />
         </div>
       </header>

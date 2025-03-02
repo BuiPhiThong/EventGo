@@ -2,8 +2,8 @@ import {createAsyncThunk,createSlice} from '@reduxjs/toolkit'
 import { apiGetAllSpeaker } from '../apis/speaker/speaker'
 
 export const fetchDataSpeaker = createAsyncThunk(
-    'getallspeaker',async () =>{
-        const response = await apiGetAllSpeaker()
+    'getallspeaker',async () =>{        
+        const response = await apiGetAllSpeaker()        
         return response        
     }
 )
