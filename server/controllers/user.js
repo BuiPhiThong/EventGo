@@ -7,9 +7,10 @@ const cookie = require("cookie-parser");
 const sendMail = require("../ultils/sendMail");
 const TempRegister = require("../models/tempoRegistation");
 const uniqid = require("uniqid");
+const sendEmail = require("../ultils/sendMail");
 
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password } = req.body;  
   if (!name || !email || !password) {
     return res.status(409).json({
       success: false,
@@ -29,6 +30,8 @@ const createUser = asyncHandler(async (req, res) => {
     });
   }
   const regisToken = uniqid(); // Tạo token duy nhất
+  // console.log("regisToken sendMail",regisToken);
+  
   const temRegis = {
     name: name,
     email: email,
@@ -63,6 +66,8 @@ const createUser = asyncHandler(async (req, res) => {
 const finalRegister = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
+  // console.log("tokenfinal",token);
+  
   const infoUser = await TempRegister.findOne({
     regisToken: token,
   });
@@ -87,8 +92,6 @@ const finalRegister = asyncHandler(async (req, res) => {
     email: infoUser?.email,
     password: infoUser?.password,
   });
-
-  console.log(user);
 
   await TempRegister.deleteOne({
     regisToken: token,
@@ -119,7 +122,7 @@ const login = asyncHandler(async (req, res) => {
       mess: "User không tồn tại",
     });
   } else {
-    const matchesPassword = await bcrypt.compare(password, user?.password);
+    const matchesPassword = await bcrypt.compare(password, user?.password);    
     if (matchesPassword) {
       const { password, role, ...userData } = user?.toObject();
       const accessToken = genAccessToken(user?._id, role);
@@ -163,6 +166,7 @@ const getCurrent = asyncHandler(async (req, res) => {
 const eventRegistration = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { eventId } = req.body;
+  
   const user = await User.findById(_id);
   if (!user) {
     return res.status(200).json({
@@ -174,7 +178,7 @@ const eventRegistration = asyncHandler(async (req, res) => {
   if (!event) {
     return res.status(404).json({
       success: false,
-      message: "Event not found",
+      mess: "Event not found",
     });
   }
 
@@ -185,13 +189,21 @@ const eventRegistration = asyncHandler(async (req, res) => {
   if (eventRegisted) {
     throw new Error("You have registered for this event");
   }
+  const html = `Xin chào ${user?.name} ,bạn đã hoàn tất quá trình đăng kí sự kiện ${event?.title},sự kiện sẽ diễn ra vào ngày ${new Date(event?.date).toLocaleString()}, hãy chú ý thời gian để tham gia.Chúc bạn một ngày vui vẻ`;
+
+  await sendEmail({
+    email:user?.email,
+    html:html,
+    subject:'Đăng kí sự kiện'
+  })
   user.eventsAttended.push({ event: eventId });
   event.attendees.push(_id);
   await event.save();
   const userRegisted = await user.save();
+
   return res.status(200).json({
     success: true,
-    message: "Event registered successfully",
+    mess: "Event registered successfully",
     data: userRegisted,
   });
 });

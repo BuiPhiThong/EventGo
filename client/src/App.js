@@ -4,6 +4,7 @@ import { Home, Public, Login } from "./pages/public";
 import path from "./ultils/path";
 import { Speaker,Event, DetailEvent } from "./components";
 import FinalRegister from "./pages/guest/FinalRegister";
+import { Admin } from "./pages/private";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         </Route>
           <Route path={path.LOGIN} element={<Login />} />
           <Route path={path.FinalRegister} element={<FinalRegister/>}/>
+          <Route path={path.Admin} element={<Admin />} />
       </Routes>
     </div>
   );

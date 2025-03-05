@@ -164,7 +164,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
   const { eid } = req.params;
   const list = await Event.findById(eid).populate(
     "attendees",
-    "eventsAttended"
+    "eventsAttended name"
   );
 
   const dataReturn = list.attendees.map((user) => {
@@ -181,7 +181,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
     success: list ? true : false,
     mess: {
       event: list.title,
-      dataReturn,
+      attendees:dataReturn,
     },
   });
 });

@@ -4,7 +4,7 @@ const router = require("express").Router();
 
 router.get("/category", ctrls.getEventByCategoryName);
 router.post("/", [verifyToken, isAdmin], ctrls.createEvent);
-router.get("/", [verifyToken, isAdmin], ctrls.listAllEvent);
+router.get("/", ctrls.listAllEvent);
 router.get("/categorydefaultleft", ctrls.getEventByCategoryLeft);
 router.get("/categorydefaultright", ctrls.getEventByCategoryRight);
 router.get("/:eid", ctrls.getEventById);
@@ -16,7 +16,7 @@ router.get(
   [verifyToken, isAdmin],
   ctrls.listUserRegisEvent
 );
-router.delete("/:eid", [verifyToken], ctrls.deleteEvent);
+router.delete("/:eid", ctrls.deleteEvent);
 
 router.put("/updevent/:eid", [verifyToken, isAdmin], ctrls.updateStatus);
 

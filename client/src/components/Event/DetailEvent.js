@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  apiEventRegistation,
   apiGetEventByCategoryName,
   apiGetEventById,
 } from "../../apis/event/event";
@@ -10,6 +11,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./DetailEvent.css";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import swal from "sweetalert";
+
 const DetailEvent = () => {
   const { eid } = useParams();
   const [detailEvent, setDetailEvent] = useState(null);
@@ -34,7 +37,25 @@ const DetailEvent = () => {
 
     fetchData();
   }, [eid]);
+  const authDataLocalStorage = JSON.parse(localStorage.getItem('authData'))
+  const isLogged = authDataLocalStorage?.isLogin
+  const accessToken = authDataLocalStorage?.accessToken
 
+  const handleRegisEvent =  async(eid) => {
+    if(isLogged && accessToken){
+      try {
+         const response = await apiEventRegistation(eid)
+         if(response?.success){
+            swal('SUCCESS',"Bạn đã đăng kí sự kiện thành công","success")
+         }
+      } catch (error) {
+        swal("Error", `${error?.response?.data?.mess}`, "error");
+      }
+    }else{
+      swal('ERROR','Bạn cần đăng nhập để có thể đăng kí sự kiện này','error')
+    }
+    
+  };
   return (
     <>
       <section
@@ -114,7 +135,13 @@ const DetailEvent = () => {
                 </div>
                 <div className="bd-tag-share">
                   <div className="tag">
-                    <a href="#">Event Registration</a>
+                    <button
+                      href="#"
+                      className="btn btn-danger text-decoration-none"
+                      onClick={() => handleRegisEvent(detailEvent?._id)}
+                    >
+                      EVENT REGISTATION
+                    </button>
                   </div>
                   <div className="s-share">
                     <span>Share:</span>
