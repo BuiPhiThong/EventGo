@@ -12,6 +12,7 @@ const Speaker = () => {
     dispatch(fetchDataSpeaker());
   }, [dispatch]);
 
+  
   return (
     <div>
       <section className="breadcrumb-section">

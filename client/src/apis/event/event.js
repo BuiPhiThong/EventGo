@@ -15,6 +15,12 @@ export const apiGetAllEvent=()=>axios({
     method:'get'
 })
 
+export const apiCreateEvent = (item)=>axios({
+    url:'/event',
+    method:'post',
+    data:item,
+})
+
 export const apiDeleteEvent= (eid) =>axios({
     url:`/event/${eid}`,
     method:'delete'

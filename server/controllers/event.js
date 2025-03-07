@@ -4,20 +4,26 @@ const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 
 const createEvent = asyncHandler(async (req, res) => {
-  const { _id } = req.user; // Lấy ID người dùng từ req.user
+  // const { _id } = req.user; // Lấy ID người dùng từ req.user
+  
   const {
     title,
     description,
     date,
     location,
-    capacity,
-    logoImage,
-    backgroundImage,
+    capacity
   } = req.body;
-
   // Kiểm tra các trường bắt buộc
-  if (!title || !description || !date || !location || !capacity) {
+  if (!title || !description || !date || !location || !capacity  ) {
     throw new Error("Missing input to create Event");
+  }
+  let logoImageURL =null
+  let backgroundImageURL = null
+  if(req.files?.logoImage && req?.files?.logoImage?.length >0){
+    logoImageURL = req.files.logoImage[0].path
+  }
+  if(req?.files?.backgroundImage && req?.files?.backgroundImage?.length >0){
+    backgroundImageURL = req.files?.backgroundImage[0]?.path
   }
   const eventDate = new Date(date);
   if (isNaN(eventDate.getTime())) {
@@ -26,7 +32,9 @@ const createEvent = asyncHandler(async (req, res) => {
   const dataAdd = {
     ...req.body,
     date: eventDate,
-    organizer: _id,
+    // organizer: _id,
+    logoImage:logoImageURL,
+    backgroundImage: backgroundImageURL
   };
   const response = await Event.create(dataAdd);
 

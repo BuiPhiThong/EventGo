@@ -9,8 +9,7 @@ var eventSchema = new mongoose.Schema(
     location: { type: String, required: true },
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: "User"
     },
     organizerUnit: {
       name: { type: String }, // Tên đơn vị tổ chức
@@ -43,6 +42,7 @@ var eventSchema = new mongoose.Schema(
         "Cuisine",
       ],
     },
+    
     views: { type: Number, default: 0 },
     capacity: { type: Number, required: true },
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

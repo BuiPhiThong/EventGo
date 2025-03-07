@@ -13,7 +13,6 @@ export const fetchAllEvent = createAsyncThunk('eventall',
     }
 })
 
-
 const EventReducer = createSlice({
     name:'eventall',
     initialState:{
