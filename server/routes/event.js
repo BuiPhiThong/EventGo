@@ -16,7 +16,12 @@ router.get("/categorydefaultright", ctrls.getEventByCategoryRight);
 router.get("/:eid", ctrls.getEventById);
 
 router.post("/insertmany", [verifyToken, isAdmin], ctrls.createManyEvent);
-router.put("/:eid", [verifyToken], ctrls.updateEvent);
+router.put("/updevent",uploader.fields([
+  { name: 'logoImage', maxCount: 1 },
+  { name: 'backgroundImage', maxCount: 1 }
+]), ctrls.updateEvent);
+
+
 router.get(
   "/registerevent/:eid",
   [verifyToken, isAdmin],

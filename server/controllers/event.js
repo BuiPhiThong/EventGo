@@ -2,6 +2,7 @@ const Event = require("../models/event");
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
+const event = require("../models/event");
 
 const createEvent = asyncHandler(async (req, res) => {
   // const { _id } = req.user; // Lấy ID người dùng từ req.user
@@ -82,7 +83,7 @@ const createManyEvent = asyncHandler(async (req, res) => {
 });
 
 const updateEvent = asyncHandler(async (req, res) => {
-  const { eid } = req.params;
+  // const { eid } = req.params;
   const {
     title,
     description,
@@ -91,8 +92,10 @@ const updateEvent = asyncHandler(async (req, res) => {
     capacity,
     organizerUnit,
     category,
-    speakerIds
+    speakerIds,
+    eid
   } = req.body;
+  
   
   const event = await Event.findById(eid);
   if (!event) {
@@ -104,10 +107,21 @@ const updateEvent = asyncHandler(async (req, res) => {
 
   event.title = title || event.title;
   event.description = description || event.description;
+
   event.date = date ? new Date(date) : event.date;
+  event.endDate = req.body.endDate ? new Date(req.body.endDate) : event?.endDate
+
+  if(req.files?.logoImage && req?.files?.logoImage?.length >0){
+    event.logoImage = req.files.logoImage[0].path
+  }
+  if(req?.files?.backgroundImage && req?.files?.backgroundImage?.length >0){
+    event.backgroundImage = req.files?.backgroundImage[0]?.path
+  }
+
   event.location = location || event.location;
   event.capacity = capacity || event.capacity;
   event.category = category || event.category;
+  event.status = req.body.status || event.status
   if (organizerUnit) {
     const { name, address, contactInfo } = req.body.organizerUnit;
     const { phone, email } = contactInfo;
@@ -287,6 +301,7 @@ const getEventByCategoryName = asyncHandler(async(req,res)=>{
   })
 })
 
+
 // const getEventByCategoryLeft = asyncHandler(async (req, res) => {
 //   const { page = 1, limit = 4 } = req.query;
 
@@ -333,7 +348,7 @@ const getEventByCategoryName = asyncHandler(async(req,res)=>{
 //   });
 // });
 
-
+   
 
 module.exports = {
   createEvent,

@@ -3,7 +3,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useDispatch, useSelector } from "react-redux";
 import "./Admin.css";
 import { fetchAllEvent } from "../../../reducer/eventReducer";
-import { apiCreateEvent, apiDeleteEvent } from "../../../apis/event/event";
+import {
+  apiCreateEvent,
+  apiDeleteEvent,
+  apiGetEventById,
+  apiUpdateEvent,
+} from "../../../apis/event/event";
 import { toast } from "react-toastify";
 import { fetchDataSpeaker } from "../../../reducer/speakerReducer";
 
@@ -14,6 +19,9 @@ const Admin = () => {
   const [beforeBackGroundImage, setBeforeBackGroundImage] = useState(null);
   const [afterBackgroundImage, setAfterBackgroundImage] = useState(null);
   const [afterLogoImage, setAfterLogoImage] = useState(null);
+
+  const [updateImageLogo, setUpdateImageLogo] = useState(null);
+  const [updateImageBackground, setUpdateImageBackground] = useState(null);
 
   const { dataSpeakerAll } = useSelector((state) => state.speakerList);
 
@@ -37,11 +45,12 @@ const Admin = () => {
 
   const [isUsersMenuOpen, setIsUsersMenuOpen] = useState(false);
   const [isEventMenuOpen, setIsEventMenuOpen] = useState(false);
-  const [updEventMenu,setUpdEventMenu] = useState(false)
 
   const [isEventDetail, setIsEventDetail] = useState(false);
   const [isEventList, setIsEventList] = useState(false);
+  const [isUpdateEvent, setIsUpdateEvent] = useState(false);
 
+  const [idUpdateEvent, setIdUpdateEvent] = useState(null);
   const [formAdd, setFormAdd] = useState({
     title: "",
     description: "",
@@ -54,22 +63,65 @@ const Admin = () => {
     logoImage: "",
   });
 
+  const [initialUpd, setInitialUpd] = useState({
+    title: "",
+    description: "",
+    date: "",
+    location: "",
+    capacity: "",
+    category: "",
+    speaker: "",
+    status: "",
+    backgroundImage: "",
+    logoImage: "",
+    organizerUnit: {
+      name: "",
+      address: "",
+      contactInfo: {
+        phone: "",
+        email: "",
+      },
+    },
+  });
+
+  // const [formUpd, setFormUpd] = useState({
+  //   title: "",
+  //   description: "",
+  //   date: "",
+  //   location: "",
+  //   capacity: "",
+  //   category: "",
+  //   speaker: "",
+  //   status: "",
+  //   backgroundImage: "",
+  //   logoImage: "",
+  //   organizerUnit: {
+  //     name: "",
+  //     address: "",
+  //     contactInfo: {
+  //       phone: "",
+  //       email: "",
+  //     },
+  //   },
+  // });
+
   const handleSelectChange = (event) => {
     setSelectedOption(event.target.value);
     if (event.target.value === "logout") {
       alert("Logging out...");
     }
   };
-
   // Lọc dữ liệu dựa trên bộ lọc
 
   const handleSelectEvent = (view) => {
     if (view === "list") {
       setIsEventList(true);
       setIsEventDetail(false);
+      setIsUpdateEvent(false);
     } else if (view === "detail") {
       setIsEventList(false);
       setIsEventDetail(true);
+      setIsUpdateEvent(false);
     }
   };
 
@@ -83,9 +135,9 @@ const Admin = () => {
     "Entertainment",
     "Cuisine",
   ];
-
+  const statusEvent = ["Upcoming", "Ongoing", "Completed", "Cancelled"];
   const handleDeletedEvent = async (eid) => {
-    const alert = 'Are you delete this event'
+    const alert = "Are you delete this event";
     if (window.confirm(alert)) {
       try {
         const response = await apiDeleteEvent(eid);
@@ -137,7 +189,7 @@ const Admin = () => {
           speaker: "",
           backgroundImage: "",
           logoImage: "",
-        });  
+        });
         dispatch(fetchAllEvent());
       }
       // Bạn có thể xử lý thêm nếu muốn, ví dụ reset form hoặc đóng modal
@@ -185,7 +237,176 @@ const Admin = () => {
     setAfterLogoImage(file); // Lưu tệp gốc để gửi đi
   };
 
+  const handleOpenUpdateEvent = async (eid) => {
+    setIsUpdateEvent(true);
+    setIsEventList(false);
+    setIdUpdateEvent(eid);
+
+    try {
+      const response = await apiGetEventById(eid);
+      setInitialUpd(response?.mess);
+      // setFormUpd(response?.mess);
+    } catch (error) {
+      toast.error("Failed to update event");
+    }
+  };
+
+  // const handleFileChange = (e) => {
+  //   const { name } = e.target;
+  //   const file = e.target.files[0];
+
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       if (name === "logoImage") {
+  //         setInitialUpd((prevState) => ({
+  //           ...prevState,
+  //           [name]: reader.result, // Cập nhật hình ảnh dưới dạng base64 để xem trước
+  //         }));
+  //         setUpdateImageLogo(file); // Cập nhật logo mới
+  //       } else if (name === "backgroundImage") {
+  //         setInitialUpd((prevState) => ({
+  //           ...prevState,
+  //           [name]: reader.result, // Cập nhật hình ảnh dưới dạng base64 để xem trước
+  //         }));
+  //         setUpdateImageBackground(file); // Cập nhật hình nền mới
+  //       }
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
+  const handleUpdateImgLogo = (e) => {
+    const {name} = e.target
+    const file = e.target.files[0];
+
+    if (!file) {
+      toast.error("Please choose image to create event");
+      return;
+    }
+
+    const validFormImage = ["image/jpeg", "image/png"];
+
+    if (!validFormImage.includes(file.type)) {
+      toast.error("Please choose image file must be jpeg or png");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setInitialUpd((prev)=>({
+        ...prev,
+        [name] :reader.result
+      }))
+    };
+    reader.readAsDataURL(file); // Đọc file dưới dạng URL
+
+    setUpdateImageLogo(file); // Lưu tệp gốc để gửi đi
+  };
+
+  const handleUpdateImgBackground = (e) => {
+    const file = e.target.files[0];
+    const {name} = e.target
+
+    if (!file) {
+      toast.error("Please choose image to create event");
+      return;
+    }
+
+    const validFormImage = ["image/jpeg", "image/png"];
+
+    if (!validFormImage.includes(file.type)) {
+      toast.error("Please choose image file must be jpeg or png");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setInitialUpd((prev)=>({
+        ...prev,
+        [name] :reader.result
+      }))
+    };
+    reader.readAsDataURL(file); // Đọc file dưới dạng URL
+
+    // Gửi tệp hình ảnh thay vì đọc và lưu dưới dạng base64
+    setUpdateImageBackground(file); // Lưu tệp gốc để gửi đi
+  };
+
+  const handleChangeUpdate = (e) => {
+    const { name, value } = e.target;
+
+    setInitialUpd((prevState) => {
+      const keys = name.split("."); // Tách name theo dấu "."
+
+      if (keys.length === 1) {
+        // Nếu không có nested key, cập nhật trực tiếp
+        return { ...prevState, [name]: value };
+      } else if (keys.length === 2) {
+        // Nếu có 2 cấp (e.g., organizerUnit.name)
+        return {
+          ...prevState,
+          [keys[0]]: {
+            ...prevState[keys[0]],
+            [keys[1]]: value,
+          },
+        };
+      } else if (keys.length === 3) {
+        // Nếu có 3 cấp (e.g., organizerUnit.contactInfo.phone)
+        return {
+          ...prevState,
+          [keys[0]]: {
+            ...prevState[keys[0]],
+            [keys[1]]: {
+              ...prevState[keys[0]][keys[1]],
+              [keys[2]]: value,
+            },
+          },
+        };
+      }
+    });
+  };
+
+  const handleSubmitUpdate = async (e) => {
+    e.preventDefault();
   
+    // Tạo FormData để gửi dữ liệu file
+    const formData = new FormData();
+    formData.append("title", initialUpd.title);
+    formData.append("description", initialUpd.description);
+    formData.append("date", initialUpd.date);
+    formData.append("location", initialUpd.location);
+    formData.append("capacity", initialUpd.capacity);
+    formData.append("category", initialUpd.category);
+    formData.append("speaker", initialUpd.speaker);
+    formData.append("status", initialUpd.status);
+    formData.append("eid", idUpdateEvent);
+    
+  
+    // Gửi thông tin tổ chức
+    formData.append("organizerUnit[name]", initialUpd.organizerUnit.name);
+    formData.append("organizerUnit[address]", initialUpd.organizerUnit.address);
+    formData.append("organizerUnit[contactInfo][phone]", initialUpd.organizerUnit.contactInfo.phone);
+    formData.append("organizerUnit[contactInfo][email]", initialUpd.organizerUnit.contactInfo.email);
+  
+    // Kiểm tra nếu có ảnh mới được chọn, thì gửi file
+    if (updateImageBackground) {
+      formData.append("backgroundImage", updateImageBackground);
+    }
+    if (updateImageLogo) {
+      formData.append("logoImage", updateImageLogo);
+    }
+  
+    try {
+      const response = await apiUpdateEvent(formData); // API nên hỗ trợ multipart/form-data
+      if (response?.success) {
+        toast.success("Event updated successfully!");
+        dispatch(fetchAllEvent()); // Cập nhật danh sách sự kiện
+      }
+    } catch (error) {
+      toast.error("Failed to update event");
+    }
+  };
+  
+
   return (
     <div className="d-flex">
       {/* Sidebar */}
@@ -510,11 +731,11 @@ const Admin = () => {
                       <td>
                         <span
                           className={`badge bg-${
-                            event.status === "upcoming"
+                            event.status === "Upcoming"
                               ? "warning"
-                              : event.status === "ongoing"
+                              : event.status === "Ongoing"
                               ? "primary"
-                              : event.status === "completed"
+                              : event.status === "Completed"
                               ? "success"
                               : "danger"
                           }`}
@@ -525,7 +746,10 @@ const Admin = () => {
                       <td>
                         {/* Dùng d-flex để hiển thị nút ngang hàng */}
                         <div className="d-flex gap-2">
-                          <button className="btn btn-primary btn-sm">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleOpenUpdateEvent(event?._id)}
+                          >
                             Update
                           </button>
                           <button
@@ -660,6 +884,256 @@ const Admin = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* updateEvent */}
+        {isUpdateEvent && (
+          <div className="container mt-5" style={{ width: "85%" }}>
+            {/* Tiêu đề */}
+            <h3 className="text-start text-update mb-4">Update Event</h3>
+
+            <form onSubmit={handleSubmitUpdate}>
+              <div className="row">
+                {/* Title */}
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Title</label>
+                  <input
+                    type="text"
+                    value={initialUpd?.title}
+                    className="form-control"
+                    onChange={handleChangeUpdate}
+                    name="title"
+                    required
+                  />
+                </div>
+
+                {/* Date */}
+                <div className="col-md-3 mb-3">
+                  <label className="form-label">Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    name="date"
+                    onChange={handleChangeUpdate}
+                    value={
+                      initialUpd?.date
+                        ? new Date(initialUpd.date).toISOString().split("T")[0]
+                        : ""
+                    }
+                    required
+                  />
+                </div>
+
+                {/* End Date */}
+                <div className="col-md-3 mb-3">
+                  <label className="form-label">End Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    name="endDate"
+                    onChange={handleChangeUpdate}
+                    value={
+                      initialUpd?.endDate
+                        ? new Date(initialUpd.endDate)
+                            .toISOString()
+                            .split("T")[0]
+                        : ""
+                    }
+                  />
+                </div>
+
+                {/* Location */}
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Location</label>
+                  <input
+                    type="text"
+                    value={initialUpd?.location}
+                    onChange={handleChangeUpdate}
+                    className="form-control"
+                    name="location"
+                    required
+                  />
+                </div>
+
+                {/* Organizer Unit */}
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Organizer Unit Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    onChange={handleChangeUpdate}
+                    name="organizerUnit.name"
+                    value={initialUpd?.organizerUnit?.name || ""}
+                  />
+                </div>
+
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">
+                    Organizer Address (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    onChange={handleChangeUpdate}
+                    name="organizerUnit.address"
+                    value={initialUpd?.organizerUnit?.address || ""}
+                  />
+                </div>
+
+                <div className="col-md-3 mb-3">
+                  <label className="form-label">Organizer Phone</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    onChange={handleChangeUpdate}
+                    name="organizerUnit.contactInfo.phone"
+                    value={initialUpd?.organizerUnit?.contactInfo?.phone || ""}
+                  />
+                </div>
+
+                <div className="col-md-3 mb-3">
+                  <label className="form-label">Organizer Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    onChange={handleChangeUpdate}
+                    name="organizerUnit.contactInfo.email"
+                    value={initialUpd?.organizerUnit?.contactInfo?.email || ""}
+                  />
+                </div>
+
+                {/* Capacity */}
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Capacity</label>
+                  <input
+                    type="number"
+                    value={initialUpd?.capacity}
+                    onChange={handleChangeUpdate}
+                    className="form-control"
+                    name="capacity"
+                    required
+                  />
+                </div>
+
+                {/* Category */}
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="category" className="form-label">
+                    Category
+                  </label>
+                  <select
+                    value={initialUpd?.category}
+                    name="category"
+                    onChange={handleChangeUpdate}
+                    className="form-select"
+                  >
+                    {categoriesEvent?.map((item, index) => (
+                      <option value={item} key={index}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="category" className="form-label">
+                    Speaker
+                  </label>
+                  <select
+                    name="speaker"
+                    value={
+                      initialUpd?.speaker?.length > 0
+                        ? initialUpd.speaker[0]?._id
+                        : ""
+                    } // Lấy _id đầu tiên nếu có
+                    className="form-select"
+                    onChange={handleChangeUpdate}
+                  >
+                    {dataSpeakerAll?.map((item, index) => (
+                      <option key={index} value={item?._id}>
+                        {item?.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Event Status */}
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Event Status</label>
+                  <select
+                    className="form-select"
+                    value={initialUpd?.status}
+                    onChange={handleChangeUpdate}
+                    name="status"
+                  >
+                    {statusEvent?.map((item, index) => (
+                      <option value={item} key={index}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Upload logo */}
+                <div className="col-md-7">
+                  <div className="upload-container">
+                    <input
+                      id="file-upload-logo"
+                      type="file"
+                      name="logoImage"
+                      hidden
+                      onChange={handleUpdateImgLogo}
+                    />
+
+                    <div className="preview-box">
+                      <img
+                        src={
+                          initialUpd?.logoImage ||
+                          "https://stc-id.nixcdn.com/v11/images/avatar_default_2020.png"
+                        }
+                        alt="Logo Preview"
+                      />
+                    </div>
+                    <label htmlFor="file-upload-logo" className="upload-label">
+                      <p style={{ color: "white" }}>
+                        Chọn hình ảnh logo để update
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Upload background */}
+                <div className="col-md-5">
+                  <div className="upload-container">
+                    <label htmlFor="file-upload-bg" className="upload-label">
+                      <i className="bi bi-cloud-arrow-up" />
+                      <p style={{ color: "white" }}>Chọn hình nền để update</p>
+                    </label>
+                    <input
+                      id="file-upload-bg"
+                      type="file"
+                      name="backgroundImage"
+                      hidden
+                      onChange={handleUpdateImgBackground}
+                    />
+                    <div className="preview-box">
+                      <img
+                        src={
+                          initialUpd?.backgroundImage ||
+                          "https://stc-id.nixcdn.com/v11/images/avatar_default_2020.png"
+                        }
+                        alt="Background Preview"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="col-12 text-end mt-3">
+                  <button type="submit" className="btn btn-success">
+                    Update Event
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         )}
       </div>

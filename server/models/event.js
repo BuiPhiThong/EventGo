@@ -50,8 +50,8 @@ var eventSchema = new mongoose.Schema(
     logoImage: { type: String },
     status: {
       type: String,
-      enum: ["upcoming", "ongoing", "completed", "cancelled"],
-      default: "upcoming",
+      enum: ["Upcoming", "Ongoing", "Completed", "Cancelled"],
+      default: "Upcoming",
     },
     sponsors: [{ name: String, logoUrl: String }],
     speaker: [{ type: mongoose.Schema.Types.ObjectId, ref: "Speaker" }],
