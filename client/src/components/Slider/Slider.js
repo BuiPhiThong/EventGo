@@ -20,7 +20,7 @@ const Slider = () => {
                   <br /> To Become Success
                 </h2>
                 <a href="#" className="primary-btn">
-                  Buy Ticket
+                  Register
                 </a>
               </div>
             </div>

@@ -37,3 +37,22 @@ export const apiEventRegistation = (eventId)=> axios({
     method:'post',
     data:{eventId}
 })
+
+export const apiEventRegistantDetail = (eventId) => axios({
+    url:'/event/registerevent',
+    method:'post',
+    data:{eventId}
+})
+
+
+export const apiUpdateStatusEventRegistant = (uid, statusEvent ,eid) =>axios({
+    url:'/event/updstatuseventregistant',
+    method:'post',
+    data:{uid, statusEvent ,eid}
+})
+
+
+export const apiGetHotEventTop1 = ()=> axios({
+    url:'/event/getHotestEvent',
+    method:'get'
+})

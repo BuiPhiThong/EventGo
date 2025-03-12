@@ -11,12 +11,16 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./DetailEvent.css";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Audio } from "react-loader-spinner";
+// hoặc bạn có thể sử dụng các loại spinner khác
+
 import swal from "sweetalert";
 
 const DetailEvent = () => {
   const { eid } = useParams();
   const [detailEvent, setDetailEvent] = useState(null);
   const [relateEvent, setRelateEvent] = useState(null);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,25 +41,43 @@ const DetailEvent = () => {
 
     fetchData();
   }, [eid]);
-  const authDataLocalStorage = JSON.parse(localStorage.getItem('authData'))
-  const isLogged = authDataLocalStorage?.isLogin
-  const accessToken = authDataLocalStorage?.accessToken
+  const authDataLocalStorage = JSON.parse(localStorage.getItem("authData"));
+  const isLogged = authDataLocalStorage?.isLogin;
+  const accessToken = authDataLocalStorage?.accessToken;
 
-  const handleRegisEvent =  async(eid) => {
-    if(isLogged && accessToken){
+  // const handleRegisEvent =  async(eid) => {
+  //   if(isLogged && accessToken){
+  //     try {
+  //        const response = await apiEventRegistation(eid)
+  //        if(response?.success){
+  //           swal('SUCCESS',"Bạn đã đăng kí sự kiện thành công","success")
+  //        }
+  //     } catch (error) {
+  //       swal("Error", `${error?.response?.data?.mess}`, "error");
+  //     }
+  //   }else{
+  //     swal('ERROR','Bạn cần đăng nhập để có thể đăng kí sự kiện này','error')
+  //   }
+
+  // };
+  const handleRegisEvent = async (eid) => {
+    if (isLogged && accessToken) {
       try {
-         const response = await apiEventRegistation(eid)
-         if(response?.success){
-            swal('SUCCESS',"Bạn đã đăng kí sự kiện thành công","success")
-         }
+        setLoading(true); // Bắt đầu loading
+        const response = await apiEventRegistation(eid);
+        if (response?.success) {
+          swal("SUCCESS", "Bạn đã đăng kí sự kiện thành công", "success");
+        }
       } catch (error) {
         swal("Error", `${error?.response?.data?.mess}`, "error");
+      } finally {
+        setLoading(false); // Kết thúc loading dù thành công hay thất bại
       }
-    }else{
-      swal('ERROR','Bạn cần đăng nhập để có thể đăng kí sự kiện này','error')
+    } else {
+      swal("ERROR", "Bạn cần đăng nhập để có thể đăng kí sự kiện này", "error");
     }
-    
   };
+
   return (
     <>
       <section
@@ -139,8 +161,22 @@ const DetailEvent = () => {
                       href="#"
                       className="btn btn-danger text-decoration-none"
                       onClick={() => handleRegisEvent(detailEvent?._id)}
+                      disabled={loading} // Vô hiệu hóa nút khi đang loading
                     >
-                      EVENT REGISTATION
+                      {loading ? (
+                        <Audio
+                          height="20"
+                          width="20"
+                          radius="4"
+                          color="white"
+                          ariaLabel="loading"
+                          wrapperStyle={{
+                            display: "inline-block",
+                            marginRight: "5px",
+                          }}
+                        />
+                      ) : null}
+                      {loading ? "ĐANG XỬ LÝ..." : "EVENT REGISTATION"}
                     </button>
                   </div>
                   <div className="s-share">

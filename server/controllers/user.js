@@ -208,23 +208,23 @@ const eventRegistration = asyncHandler(async (req, res) => {
   });
 });
 
-const cancellEvent = asyncHandler(async (req, res) => {
-  const { eid } = req.body;
-  const { _id } = req.user;
+// const cancellEvent = asyncHandler(async (req, res) => {
+//   const { eid ,statusEvent} = req.body;
+//   const { _id } = req.user;
 
-  const user = await User.findById(_id);
-  const filterRegisEvent = user?.eventsAttended.filter(
-    (item) => item.event.toString() !== eid
-  );
+//   const user = await User.findById(_id);
+//   const filterRegisEvent = user?.eventsAttended.filter(
+//     (item) => item.event.toString() !== eid
+//   );
 
-  user.eventsAttended = filterRegisEvent;
-  await user.save();
+//   user.eventsAttended = filterRegisEvent;
+//   await user.save();
 
-  return res.status(200).json({
-    success: true,
-    mess: "Hủy thành công",
-  });
-});
+//   return res.status(200).json({
+//     success: true,
+//     mess: "Hủy thành công",
+//   });
+// });
 
 // const createUser = async (req, res) => {
 //     try {
@@ -258,5 +258,5 @@ module.exports = {
   login,
   getCurrent,
   eventRegistration,
-  cancellEvent,
+  // cancellEvent,
 };

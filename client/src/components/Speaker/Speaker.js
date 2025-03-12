@@ -41,7 +41,7 @@ const Speaker = () => {
                   <div className="row">
                     <div className="col-lg-6">
                       <div className="si-pic">
-                        <img src="https://c8.alamy.com/comp/2RFXFFM/seoul-south-korea-3rd-aug-2023-south-korean-actress-han-hyo-joo-attend-a-blue-carpet-for-the-disney-film-moving-blue-carpet-in-seoul-south-korea-on-august-3-2023-photo-by-lee-young-hosipa-usa-credit-sipa-usaalamy-live-news-2RFXFFM.jpg" alt="" />
+                        <img style={{height:'370px' , width:'383px' , objectFit:'cover'}} src={el?.photoUrl} alt="" />
                       </div>
                     </div>
                     <div className="col-lg-6">

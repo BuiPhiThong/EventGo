@@ -6,7 +6,7 @@ router.post('/register',ctrls.createUser)
 router.post('/login',ctrls.login)
 router.get('/getcurrent',[verifyToken],ctrls.getCurrent)
 router.post('/regisevent',[verifyToken],ctrls.eventRegistration)
-router.put('/cancelevent',[verifyToken],ctrls.cancellEvent)
+// router.put('/cancelevent',[verifyToken],ctrls.cancellEvent)
 router.get('/finalregister/:token',ctrls.finalRegister)
 
 module.exports =router
