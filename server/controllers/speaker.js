@@ -66,7 +66,7 @@ const createSpeaker = asyncHandler(async (req, res) => {
 
   const getAllSpeakers = asyncHandler(async (req, res) => {
     try {
-      const speakers = await Speaker.find();
+      const speakers = await Speaker.find().limit(10);
   
     return res.status(200).json({
         success: true,

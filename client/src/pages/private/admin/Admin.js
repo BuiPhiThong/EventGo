@@ -19,8 +19,8 @@ const Admin = () => {
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState({
-    confirmed:false,
-    cancelled:false
+    confirmed: false,
+    cancelled: false,
   });
   const [showModal, setShowModal] = useState(false);
 
@@ -28,6 +28,7 @@ const Admin = () => {
   const [afterBackgroundImage, setAfterBackgroundImage] = useState(null);
   const [afterLogoImage, setAfterLogoImage] = useState(null);
 
+  const [modalFilterDetailEvent, setModalFilterDetailEvent] = useState(false);
   const [updateImageLogo, setUpdateImageLogo] = useState(null);
   const [updateImageBackground, setUpdateImageBackground] = useState(null);
 
@@ -49,6 +50,9 @@ const Admin = () => {
   const [selectedOption, setSelectedOption] = useState(""); // Dropdown Admin
 
   const [eventStatusFilter, setEventStatusFilter] = useState("all"); // Lọc theo trạng thái sự kiện
+  const [eventStatusFilterDetail, setEventStatusFilterDetail] = useState("all"); // Lọc theo trạng thái sự kiện
+  const [userStatusFilterDetail, setUserStatusFilterDetail] = useState("all"); // Lọc theo trạng thái sự kiện
+
   const [categoryFilter, setcategoryFilter] = useState("all"); // Lọc theo category
 
   const [isUsersMenuOpen, setIsUsersMenuOpen] = useState(false);
@@ -428,6 +432,19 @@ const Admin = () => {
   const listDataFilter = Array.isArray(eventAll?.mess)
     ? [...eventAll?.mess]
     : [];
+  const listDataFilterDetail = Array.isArray( eventRegistantData?.attendees)
+    ? [... eventRegistantData?.attendees]
+    : [];
+
+  
+    let afterFilterDetail = listDataFilterDetail?.filter((item) => {
+      
+      // const matchesStatusEvent =
+      // eventStatusFilterDetail === "all" || item?.eventstatus === eventStatusFilterDetail;
+      const matchesStatusUser =userStatusFilterDetail === "all" || item?.statusRegisEvent[0]?.status === userStatusFilterDetail;
+  
+      return matchesStatusUser ;
+    });
 
   let afterFilter = listDataFilter?.filter((item) => {
     const matchesCategory =
@@ -441,6 +458,7 @@ const Admin = () => {
   const handleEventRegistant = async (eid) => {
     setIsEventList(false);
     setIsEventDetail(true);
+    setModalFilterDetailEvent(true);
     setIsUpdateEvent(false);
     // setIdEventRegistant(eid);
     try {
@@ -465,134 +483,83 @@ const Admin = () => {
     setSelectedAttendee(null);
     setIsModalOpen(false);
   };
-
-  // const handleUpdateStatusEventRegistant = async (data) => {
-  //   if(data === "confirmed"){
-  //     setLoading({
-  //       ...loading,
-  //       confirmed:data
-  //     })
-  //   }else{
-  //     setLoading({
-  //       ...loading,
-  //       cancelled:data
-  //     })
-  //   }
-  //   try {
-  //     await new Promise(resolve => setTimeout(resolve, 2000)); // Trễ 2 giây
-
-  //     const response = await apiUpdateStatusEventRegistant(
-  //       selectedAttendee?.id,
-  //       data,
-  //       selectedAttendee?.statusRegisEvent[0]?.idEvent
-  //     );
-
-  //     if (response?.success) {
-  //       toast.success(`${data} event status successfully!`);
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     if (data === "confirmed") {
-  //       setLoading({
-  //         ...loading,
-  //         confirmed: false
-  //       });
-  //     } else if (data === "cancelled") {
-  //       setLoading({
-  //         ...loading,
-  //         cancelled: false
-  //       });
-  //     }
-  //   }
-  // };
-
-
   const handleUpdateStatusEventRegistant = async (data) => {
-    if(data === "confirmed"){
-      setLoading(prevState => ({
+    if (data === "confirmed") {
+      setLoading((prevState) => ({
         ...prevState,
-        confirmed: true
+        confirmed: true,
       }));
     } else {
-      setLoading(prevState => ({
+      setLoading((prevState) => ({
         ...prevState,
-        cancelled: true
+        cancelled: true,
       }));
     }
-    
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Trễ 2 giây
-  
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Trễ 2 giây
+
       const response = await apiUpdateStatusEventRegistant(
         selectedAttendee?.id,
         data,
         selectedAttendee?.statusRegisEvent[0]?.idEvent
       );
-  
+
       if (response?.success) {
         // Cập nhật trạng thái của selectedAttendee
-        setSelectedAttendee(prevAttendee => {
+        setSelectedAttendee((prevAttendee) => {
           if (!prevAttendee) return null;
-          
+
           return {
             ...prevAttendee,
-            statusRegisEvent: prevAttendee.statusRegisEvent.map(status => ({
+            statusRegisEvent: prevAttendee.statusRegisEvent.map((status) => ({
               ...status,
-              status: data // Cập nhật trạng thái mới
-            }))
+              status: data, // Cập nhật trạng thái mới
+            })),
           };
         });
-        
+
         // Cập nhật dữ liệu trong bảng nếu cần
         // Nếu bạn có state lưu trữ eventRegistantData, bạn cũng nên cập nhật nó
-        setEventRegistantData(prevData => {
+        setEventRegistantData((prevData) => {
           if (!prevData) return prevData;
-          
+
           return {
             ...prevData,
-            attendees: prevData.attendees.map(attendee => 
-              attendee.id === selectedAttendee.id 
+            attendees: prevData.attendees.map((attendee) =>
+              attendee.id === selectedAttendee.id
                 ? {
                     ...attendee,
-                    statusRegisEvent: attendee.statusRegisEvent.map(status => ({
-                      ...status,
-                      status: data
-                    }))
+                    statusRegisEvent: attendee.statusRegisEvent.map(
+                      (status) => ({
+                        ...status,
+                        status: data,
+                      })
+                    ),
                   }
                 : attendee
-            )
+            ),
           };
         });
-        
+
         toast.success(`${data} event status successfully!`);
       }
     } catch (error) {
       console.log(error);
     } finally {
       if (data === "confirmed") {
-        setLoading(prevState => ({
+        setLoading((prevState) => ({
           ...prevState,
-          confirmed: false
+          confirmed: false,
         }));
       } else if (data === "cancelled") {
-        setLoading(prevState => ({
+        setLoading((prevState) => ({
           ...prevState,
-          cancelled: false
+          cancelled: false,
         }));
       }
     }
   };
-  
-  // const handleSelectValueUpdateRegistant = (e) => {
-  //   const { name, value } = e.target;
-
-  //   setStatusUpdEventRegistant((prev) => ({
-  //     ...prev,
-  //     [name]: value,
-  //   }));
-  // };
-  // console.log(selectedAttendee);
 
   return (
     <div className="d-flex">
@@ -975,103 +942,33 @@ const Admin = () => {
         {isEventDetail && (
           <div>
             <h3>Event Detail</h3>
-            <div className="d-flex gap-2 mb-3 mt-5">
-              {/* <select
-                className="form-select w-auto"
-                value={eventStatusFilter}
-                onChange={(e) => setEventStatusFilter(e.target.value)}
-              >
-                <option value="">All Event Status</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+            {modalFilterDetailEvent && (
+              <div className="d-flex gap-2 mb-3 mt-5">
+                {/* <select
+                  className="form-select w-auto"
+                  value={eventStatusFilterDetail}
+                  onChange={(e) => setEventStatusFilterDetail(e.target.value)}
+                >
+                  <option value="">All Event Status</option>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select> */}
 
-              <select
-                className="form-select w-auto"
-                value={categoryFilter}
-                onChange={(e) => setcategoryFilter(e.target.value)}
-              >
-                <option value="">All User Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="cancelled">Cancelled</option>
-              </select> */}
-            </div>
+                <select
+                  className="form-select w-auto"
+                   value={userStatusFilterDetail}
+                  onChange={(e) => setUserStatusFilterDetail(e.target.value)}
+                >
+                  <option value="all">All User Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                </select>
+              </div>
+            )}
 
             {/* Table */}
-            {/* 
-            <table className="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Title</th>
-                  <th>Date</th>
-                  <th>Capacity</th>
-                  <th>Event Status</th>
-                  <th>User Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {eventRegistantData?.attendees?.map((attendee, index) => (
-                  <tr key={index}>
-                    <td>{attendee.name || "N/A"}</td>
-                    <td>{attendee.email || "N/A"}</td>
-                    <td>{eventRegistantData.title || "N/A"}</td>
-                    <td>{eventRegistantData.date || "N/A"}</td>
-                    <td>{eventRegistantData.capacity || "N/A"}</td>
-                    <td>
-                      <span
-                        className={`badge bg-${
-                          eventRegistantData.eventstatus === "Upcoming"
-                            ? "warning"
-                            : eventRegistantData.eventstatus === "Ongoing"
-                            ? "primary"
-                            : eventRegistantData.eventstatus === "Completed"
-                            ? "success"
-                            : "danger"
-                        }`}
-                      >
-                        {eventRegistantData.eventstatus}
-                      </span>
-                    </td>
-                    <td>
-                      {attendee.statusRegisEvent?.map((status, statusIndex) => (
-                        <span
-                          key={statusIndex}
-                          className={`badge bg-${
-                            status.status === "pending"
-                              ? "secondary"
-                              : status.status === "confirmed"
-                              ? "success"
-                              : "danger"
-                          }`}
-                        >
-                          {status.status}
-                        </span>
-                      ))}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#statusModal"
-                        onclick="prepareModal(this)"
-                        data-attendee-id="${index}"
-                      >
-                        Set
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-
-             
-            </table> */}
 
             <table className="table table-striped table-hover">
               <thead>
@@ -1087,55 +984,61 @@ const Admin = () => {
                 </tr>
               </thead>
               <tbody>
-                {eventRegistantData?.attendees?.map((attendee, index) => (
-                  <tr key={index}>
-                    <td>{attendee.name || "N/A"}</td>
-                    <td>{attendee.email || "N/A"}</td>
-                    <td>{eventRegistantData.title || "N/A"}</td>
-                    <td>{eventRegistantData.date || "N/A"}</td>
-                    <td>{eventRegistantData.capacity || "N/A"}</td>
-                    <td>
-                      <span
-                        className={`badge bg-${
-                          eventRegistantData.eventstatus === "Upcoming"
-                            ? "warning"
-                            : eventRegistantData.eventstatus === "Ongoing"
-                            ? "primary"
-                            : eventRegistantData.eventstatus === "Completed"
-                            ? "success"
-                            : "danger"
-                        }`}
-                      >
-                        {eventRegistantData.eventstatus}
-                      </span>
-                    </td>
-                    <td>
-                      {attendee.statusRegisEvent?.map((status, statusIndex) => (
+                {afterFilterDetail?.length > 0 ? (
+                  afterFilterDetail?.map((attendee, index) => (
+                    <tr key={index}>
+                      <td>{attendee.name || "N/A"}</td>
+                      <td>{attendee.email || "N/A"}</td>
+                      <td>{eventRegistantData.title || "N/A"}</td>
+                      <td>{eventRegistantData.date || "N/A"}</td>
+                      <td>{eventRegistantData.capacity || "N/A"}</td>
+                      <td>
                         <span
-                          key={statusIndex}
                           className={`badge bg-${
-                            status.status === "pending"
-                              ? "secondary"
-                              : status.status === "confirmed"
+                            eventRegistantData.eventstatus === "Upcoming"
+                              ? "warning"
+                              : eventRegistantData.eventstatus === "Ongoing"
+                              ? "primary"
+                              : eventRegistantData.eventstatus === "Completed"
                               ? "success"
                               : "danger"
                           }`}
                         >
-                          {status.status}
+                          {eventRegistantData.eventstatus}
                         </span>
-                      ))}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-info btn-sm"
-                        onClick={() => handleOpenModal(attendee)}
-                      >
-                        Set
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        {attendee.statusRegisEvent?.map(
+                          (status, statusIndex) => (
+                            <span
+                              key={statusIndex}
+                              className={`badge bg-${
+                                status.status === "pending"
+                                  ? "secondary"
+                                  : status.status === "confirmed"
+                                  ? "success"
+                                  : "danger"
+                              }`}
+                            >
+                              {status.status}
+                            </span>
+                          )
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-info btn-sm"
+                          onClick={() => handleOpenModal(attendee)}
+                        >
+                          Set
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <p>No User Register</p>
+                )}
               </tbody>
             </table>
 
@@ -1186,7 +1089,9 @@ const Admin = () => {
                                   }}
                                 />
                               ) : null}
-                              {loading?.confirmed ? "ĐANG XỬ LÝ..." : "Confirmed"}
+                              {loading?.confirmed
+                                ? "ĐANG XỬ LÝ..."
+                                : "Confirmed"}
                             </button>
                             <button
                               className="btn btn-danger"
@@ -1208,7 +1113,9 @@ const Admin = () => {
                                   }}
                                 />
                               ) : null}
-                              {loading?.cancelled ? "ĐANG XỬ LÝ..." : "Cancelled"}
+                              {loading?.cancelled
+                                ? "ĐANG XỬ LÝ..."
+                                : "Cancelled"}
                             </button>
                           </div>
                         ) : selectedAttendee?.statusRegisEvent?.[0]?.status ===

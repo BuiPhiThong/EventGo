@@ -8,7 +8,7 @@ const verifyToken = asyncHandler(async (req, res, next) => {
 
     jwt.verify(token, process.env.ACESS_SECRETKEY, (err, decode) => {
       if (err) {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
           mess: "Invalid AccessToken",
         });

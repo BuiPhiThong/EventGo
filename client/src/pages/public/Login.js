@@ -35,7 +35,6 @@ const Login = () => {
     }));
   };
 
-  
   const handleSubmitLogin = async (e) => {
     e.preventDefault();
     if (!formLogin?.email || !formLogin?.password) {
@@ -46,14 +45,26 @@ const Login = () => {
       const response = await apiLogin(formLogin?.email, formLogin?.password);
       if (response?.success) {
         swal("SUCCESS", "Login Successfully!!!", "success");
-        navigate("/");
-        localStorage.setItem(
-          "authData",
-          JSON.stringify({
-            isLogin: true,
-            accessToken: response?.accessToken,
-          })
-        );
+        if (response?.userData?.role === "User") {
+          navigate("/");
+          localStorage.setItem(
+            "authData",
+            JSON.stringify({
+              isLogin: true,
+              accessToken: response?.accessToken,
+            })
+          );
+        }
+        if (response?.userData?.role === "Admin") {
+          navigate("/admin");
+          localStorage.setItem(
+            "authData",
+            JSON.stringify({
+              isLogin: true,
+              accessToken: response?.accessToken,
+            })
+          );
+        }
       }
     } catch (error) {
       swal("FAILED", "Login Failed!!!", "error");
@@ -68,8 +79,12 @@ const Login = () => {
       return; // Nếu trống, không tiếp tục submit form
     }
     try {
-      const response = await apiRegistation(formRegis?.name,formRegis?.email,formRegis?.password)
-      if(response?.success){
+      const response = await apiRegistation(
+        formRegis?.name,
+        formRegis?.email,
+        formRegis?.password
+      );
+      if (response?.success) {
         swal({
           title: "Đăng ký thành công",
           text: "Vui lòng kiểm tra email để hoàn tất xác thực!",
@@ -81,7 +96,6 @@ const Login = () => {
     }
   };
 
-  
   return (
     <div className={styles.loginContainer}>
       <section className="h-100">

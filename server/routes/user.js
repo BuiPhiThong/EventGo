@@ -3,6 +3,7 @@ const {verifyToken,isAdmin} = require('../middlewares/verify')
 const ctrls = require('../controllers/user')
 
 router.post('/register',ctrls.createUser)
+router.post('/refreshtoken',ctrls.refreshToken)
 router.post('/login',ctrls.login)
 router.get('/getcurrent',[verifyToken],ctrls.getCurrent)
 router.post('/regisevent',[verifyToken],ctrls.eventRegistration)

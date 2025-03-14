@@ -179,31 +179,32 @@ const listAllEvent = asyncHandler(async (req, res) => {
   });
 });
 
-// const listUserRegisEvent = asyncHandler(async (req, res) => {
-//   const { eid } = req.params;
-//   const list = await Event.findById(eid).populate(
-//     "attendees",
-//     "eventsAttended name"
-//   );
+// const listUserRegisEvent2 = asyncHandler(async (req, res) => {
+// // Kiểm tra trước khi truy vấn
+// const list = await Event.find({ 
+//   attendees: { $exists: true, $not: { $size: 0 } } 
+// }).populate("attendees", "eventsAttended name -_id").select('title');
 
-//   const dataReturn = list.attendees.map((user) => {
 
-//     const data = user?.eventsAttended.map((item) => ({
-//       idEvent:item?.event,
-//       status: item?.status,
-//       registeredAt: item.registeredAt,
-//     }));
+//   // const dataReturn = list.attendees.map((user) => {
 
-//     return {
-//       name: user?.name,
-//       statusRegisEvent: data,
-//     };
-//   });
+//   //   const data = user?.eventsAttended.map((item) => ({
+//   //     idEvent:item?.event,
+//   //     status: item?.status,
+//   //     registeredAt: item.registeredAt,
+//   //   }));
+
+//   //   return {
+//   //     name: user?.name,
+//   //     statusRegisEvent: data,
+//   //   };
+//   // });
 //   return res.status(200).json({
 //     success: list ? true : false,
 //     mess: {
-//       event: list.title,
-//       attendees:dataReturn,
+//       length:list.length,
+//       event: list,
+//       // attendees:dataReturn,
 //     },
 //   });
 // });
@@ -213,7 +214,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
   const list = await Event.findById(eventId).populate(
     "attendees",
     "eventsAttended name email"
-  );
+  )
 
   if (!list) {
     return res.status(404).json({
@@ -237,6 +238,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
       name: user?.name,
       id: user?._id,
       email: user?.email,
+      eventstatus:list?.status,
       statusRegisEvent: data,
     };
   });
@@ -544,6 +546,7 @@ module.exports = {
   deleteEvent,
   listAllEvent,
   listUserRegisEvent,
+  // listUserRegisEvent2,
   updateStatus,
   getEventByCategoryLeft,
   getEventByCategoryRight,

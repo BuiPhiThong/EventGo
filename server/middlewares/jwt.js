@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken')
 
 const genAccessToken = (uid,role)=>{
-    return jwt.sign({_id:uid,role:role},process.env.ACESS_SECRETKEY,{expiresIn:'2000s'}) 
+    return jwt.sign({_id:uid,role:role},process.env.ACESS_SECRETKEY,{expiresIn:'15s'}) 
 }
 
 

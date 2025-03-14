@@ -7,6 +7,12 @@ router.post(
   // [verifyToken, isAdmin],
   ctrls.listUserRegisEvent
 );
+
+// router.post(
+//   "/registerevent2",
+//   // [verifyToken, isAdmin],
+//   ctrls.listUserRegisEvent2
+// );
 router.get("/getHotestEvent", ctrls.getHotestEvent);
 
 router.post("/updstatuseventregistant", ctrls.updateStatus);

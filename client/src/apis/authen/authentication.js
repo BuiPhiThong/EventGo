@@ -22,3 +22,11 @@ export const apiGetCurrent=()=>axios({
     url:'/user/getcurrent',
     method:'get'
 })
+
+
+export const apiRefreshToken = ()=>axios({
+    url:'/user/refreshtoken',
+    method:'post'
+})
+
+

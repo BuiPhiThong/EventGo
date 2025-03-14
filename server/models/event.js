@@ -35,7 +35,6 @@ var eventSchema = new mongoose.Schema(
         "Business",
         "Design",
         "Education",
-
         "Science",
         "Health",
         "Entertainment",

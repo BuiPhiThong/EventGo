@@ -4,6 +4,7 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const { genAccessToken, genRefreshToken } = require("../middlewares/jwt");
 const cookie = require("cookie-parser");
+const jwt = require('jsonwebtoken')
 const sendMail = require("../ultils/sendMail");
 const TempRegister = require("../models/tempoRegistation");
 const uniqid = require("uniqid");
@@ -60,6 +61,36 @@ const createUser = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     mess: "Send Mail to create SuccessFully",
+  });
+});
+
+const refreshToken = asyncHandler(async (req, res) => {
+  const cookie = req.cookies;
+
+  if (!cookie || !cookie.refreshToken) {
+    return res
+      .status(403)
+      .json({ success: false, message: "No refresh token in cookie!" });
+  }
+  const decoded = await jwt.verify(cookie.refreshToken, process.env.REFRESH_SECRETKEY);
+
+  // Kiểm tra `refreshToken` trong cookie so với token trong DB
+  const match = await User.findOne({
+    _id: decoded._id,
+    refreshToken: cookie.refreshToken,
+  });
+
+  if (!match) {
+    return res.status(403).json({
+      success: false,
+      newAccessToken: "Refresh token not matched",
+    });
+  }
+  // Tạo Access Token mới
+  const newAccessToken = genAccessToken(match._id, match.role);
+  return res.status(200).json({
+    success: true,
+    accessToken: newAccessToken,
   });
 });
 
@@ -124,9 +155,9 @@ const login = asyncHandler(async (req, res) => {
   } else {
     const matchesPassword = await bcrypt.compare(password, user?.password);    
     if (matchesPassword) {
-      const { password, role, ...userData } = user?.toObject();
-      const accessToken = genAccessToken(user?._id, role);
-      const refreshToken = genRefreshToken(user?._id, role);
+      const { password, ...userData } = user?.toObject();
+      const accessToken = genAccessToken(user?._id, user?.role);
+      const refreshToken = genRefreshToken(user?._id, user?.role);
 
       await User.findByIdAndUpdate(
         user?._id,
@@ -254,6 +285,7 @@ const eventRegistration = asyncHandler(async (req, res) => {
 // }
 module.exports = {
   createUser,
+  refreshToken,
   finalRegister,
   login,
   getCurrent,

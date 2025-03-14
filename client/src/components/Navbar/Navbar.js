@@ -12,6 +12,8 @@ import { fetchDataSpeaker } from "../../reducer/speakerReducer";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchCurrentData, fetCurrentData } from "../../reducer/authenReducer";
+import { isTokenExpired } from "../../ultils/helper";
+import { apiRefreshToken } from "../../apis/authen/authentication";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -27,7 +29,6 @@ const Navbar = () => {
   );
   useEffect(() => {
     if (isLogged && accessToken) {
-      
       dispatch(fetchCurrentData());
     }
   }, [dispatch, isLogged, accessToken]);
@@ -46,6 +47,27 @@ const Navbar = () => {
       handleLogout();
     }
   };
+
+  useEffect(() => {
+    const checkToken = async () => {
+      if (accessToken && isTokenExpired(accessToken)) {
+        try {
+          const result = await apiRefreshToken();
+
+          if (!result?.data?.success) {
+            // Xử lý khi server trả về success: false
+            handleLogout()
+          }
+        } catch (error) {
+          // Xử lý mọi lỗi từ API
+          handleLogout()
+        }
+      }
+    };
+
+    if (accessToken) checkToken();
+  }, [dispatch, accessToken]);
+
   return (
     <div>
       <header className="header-section">
@@ -82,7 +104,7 @@ const Navbar = () => {
                   <a href="#">Schedule</a>
                 </li>
                 <li>
-                  <a href="/event">Event</a>
+                  <a href="/event">Hot News</a>
                 </li>
                 <li>
                   <a href="#">Contacts</a>
