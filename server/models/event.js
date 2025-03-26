@@ -9,7 +9,7 @@ var eventSchema = new mongoose.Schema(
     location: { type: String, required: true },
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
     organizerUnit: {
       name: { type: String }, // Tên đơn vị tổ chức
@@ -18,8 +18,7 @@ var eventSchema = new mongoose.Schema(
         phone: { type: String }, // Số điện thoại liên lạc của đơn vị
         email: { type: String }, // Email liên lạc của đơn vị
       },
-    }
-    ,
+    },
     // guests: [
     //   {
     //     name: { type: String, required: true },
@@ -41,7 +40,7 @@ var eventSchema = new mongoose.Schema(
         "Cuisine",
       ],
     },
-    
+
     views: { type: Number, default: 0 },
     capacity: { type: Number, required: true },
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -52,6 +51,22 @@ var eventSchema = new mongoose.Schema(
       enum: ["Upcoming", "Ongoing", "Completed", "Cancelled"],
       default: "Upcoming",
     },
+    feedback: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        feedbackComment: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now },
+        replies: [
+          {
+            adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Người trả lời
+            replyComment: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now },
+            updatedAt: { type: Date, default: Date.now },
+          },
+        ],
+      },
+    ],
     sponsors: [{ name: String, logoUrl: String }],
     speaker: [{ type: mongoose.Schema.Types.ObjectId, ref: "Speaker" }],
   },

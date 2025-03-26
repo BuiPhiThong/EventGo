@@ -56,3 +56,29 @@ export const apiGetHotEventTop1 = ()=> axios({
     url:'/event/getHotestEvent',
     method:'get'
 })
+
+export const apiFeedbackComment = (eventId, comment)=>axios({
+    url:'/event/feedbackuser',
+    method:'post',
+    data:{eventId,comment}
+})
+
+
+export const apiReplyFeedbackComment = (eventId,feedbackId,replyComment)=>axios({
+    url:'/event/replyfeedbackuser',
+    method:'post',
+    data:{eventId,feedbackId,replyComment}
+})
+
+
+export const apiUpdateFeedback = (eventId,feedbackId,feedbackComment)=>axios({
+    url:'/event/updatefeedbackuser',
+    method:'post',
+    data:eventId,feedbackId,feedbackComment
+})
+
+export const apiDeleteFeedback = (eventId,feedbackId)=>axios({
+    url:'/event/deletefeedbackuser',
+    method:'post',
+    data:eventId,feedbackId
+})

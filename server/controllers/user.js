@@ -186,7 +186,7 @@ const login = asyncHandler(async (req, res) => {
 
 const getCurrent = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const userData = await User.findById(_id).select("-refreshToken -role");
+  const userData = await User.findById(_id).select("-refreshToken");
 
   return res.status(200).json({
     success: userData ? true : false,

@@ -912,13 +912,20 @@ const Admin = () => {
                         <div className="d-flex gap-2">
                           <button
                             className="btn btn-primary btn-sm"
-                            onClick={() => handleOpenUpdateEvent(event?._id)}
+                            onClick={(e) =>{
+                              e.stopPropagation(); // Ngăn sự kiện truyền lên thẻ <tr>
+                              handleOpenUpdateEvent(event?._id)
+                            }}
                           >
                             Update
                           </button>
+                         
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() => handleDeletedEvent(event?._id)}
+                            onClick={(e) =>{
+                              e.stopPropagation(); // Ngăn sự kiện truyền lên thẻ <tr>
+                              handleDeletedEvent(event?._id)
+                            }}
                           >
                             Delete
                           </button>

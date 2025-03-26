@@ -1,11 +1,14 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 
 const Event = () => {
   const [eventleft, setEventLeft] = useState([]);
   const [eventRight, setEventRight] = useState([]);
-
+  const { user, errorUser, isLoadingUser } = useSelector(
+    (state) => state.authen
+  );
   useEffect(() => {
     const fetchData = async () => {
       const dataLeft = await axios.get(
@@ -19,8 +22,19 @@ const Event = () => {
     };
     fetchData();
   }, []);
+  // console.log(eventleft?);
+  console.log(eventleft);
+  
+  const includeRegister = eventleft?.mess?.length > 0? eventleft?.mess[0]?.attendees:'kkk'
+  const includeRegister2 = eventleft?.mess?.length > 0? eventleft?.mess[2]?.attendees:'kkk'
+  const includeRegister3 = eventleft?.mess?.length > 0? eventleft?.mess[3]?.attendees:'kkk'
+  const includeRegister1 = eventleft?.mess?.length > 0? eventleft?.mess[1]?.attendees:'kkk'
+  
 
-  return (
+  const checkReigster= includeRegister?.includes(user?._id?.toString()) ? true: false
+  console.log(checkReigster);
+  
+    return (
     <>
       <section className="breadcrumb-section">
         <div className="container">
@@ -61,6 +75,7 @@ const Event = () => {
                       <i className="fa fa-clock-o" />{" "}
                       {new Date(eventleft.mess[0]?.date).toLocaleString()}
                     </span>
+                    <h3 style={{color:'red'}}> register : {includeRegister?.includes(user?._id?.toString()) ? 'Đã đăng kí': 'chưa đăng kí'} </h3>
                   </div>
                 </div>
               )}
@@ -89,6 +104,8 @@ const Event = () => {
                           <i className="fa fa-clock-o" />{" "}
                           {new Date(eventleft.mess[2]?.date).toLocaleString()}
                         </span>
+                    <h3 style={{color:'red'}}> register : {includeRegister2?.includes(user?._id?.toString()) ? 'Đã đăng kí': 'chưa đăng kí'} </h3>
+
                       </div>
                     </div>
                   </div>
@@ -117,6 +134,8 @@ const Event = () => {
                           <i className="fa fa-clock-o" />{" "}
                           {new Date(eventleft.mess[3]?.date).toLocaleString()}
                         </span>
+                        <h3 style={{color:'red'}}> register : {includeRegister3?.includes(user?._id?.toString()) ? 'Đã đăng kí': 'chưa đăng kí'} </h3>
+
                       </div>
                     </div>
                   </div>
@@ -145,6 +164,8 @@ const Event = () => {
                       <i className="fa fa-clock-o" />{" "}
                       {new Date(eventleft.mess[1]?.date).toLocaleString()}
                     </span>
+                    <h3 style={{color:'red'}}> register : {includeRegister1?.includes(user?._id?.toString()) ? 'Đã đăng kí': 'chưa đăng kí'} </h3>
+
                   </div>
                 </div>
               )}

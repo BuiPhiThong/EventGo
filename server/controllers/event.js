@@ -181,10 +181,9 @@ const listAllEvent = asyncHandler(async (req, res) => {
 
 // const listUserRegisEvent2 = asyncHandler(async (req, res) => {
 // // Kiểm tra trước khi truy vấn
-// const list = await Event.find({ 
-//   attendees: { $exists: true, $not: { $size: 0 } } 
+// const list = await Event.find({
+//   attendees: { $exists: true, $not: { $size: 0 } }
 // }).populate("attendees", "eventsAttended name -_id").select('title');
-
 
 //   // const dataReturn = list.attendees.map((user) => {
 
@@ -214,7 +213,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
   const list = await Event.findById(eventId).populate(
     "attendees",
     "eventsAttended name email"
-  )
+  );
 
   if (!list) {
     return res.status(404).json({
@@ -238,7 +237,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
       name: user?.name,
       id: user?._id,
       email: user?.email,
-      eventstatus:list?.status,
+      eventstatus: list?.status,
       statusRegisEvent: data,
     };
   });
@@ -257,7 +256,7 @@ const listUserRegisEvent = asyncHandler(async (req, res) => {
 });
 
 const updateStatus = asyncHandler(async (req, res) => {
-  const { uid, statusEvent, eid } = req.body;  
+  const { uid, statusEvent, eid } = req.body;
   // Kiểm tra xem uid và eid có phải là ObjectId hợp lệ không
   if (
     !mongoose.Types.ObjectId.isValid(uid) ||
@@ -279,8 +278,8 @@ const updateStatus = asyncHandler(async (req, res) => {
     const filterUserRegistant = user?.eventsAttended?.filter(
       (item) => item?.event.toString() !== eid
     );
-    user.eventsAttended = filterUserRegistant
-    await user.save()
+    user.eventsAttended = filterUserRegistant;
+    await user.save();
     const event = await Event.findById(eid);
     const filterEventRegistant = event?.attendees?.filter(
       (item) => item?.toString() !== uid
@@ -293,14 +292,14 @@ const updateStatus = asyncHandler(async (req, res) => {
       mess: "Registration cancelled successfully",
     });
   }
-  if (statusEvent === "confirmed"){
-  const updatedStatusEvent = await User.findOneAndUpdate(
+  if (statusEvent === "confirmed") {
+    const updatedStatusEvent = await User.findOneAndUpdate(
       { _id: uid, "eventsAttended.event": eid },
       { $set: { "eventsAttended.$.status": statusEvent } },
       { new: true }
     );
     return res.status(200).json({
-      success: updatedStatusEvent? true : false,
+      success: updatedStatusEvent ? true : false,
       mess: "Registration confirmed successfully",
     });
   }
@@ -335,6 +334,7 @@ const getEventByCategoryLeft = asyncHandler(async (req, res) => {
   const technologyEvent = await Event.find({ category: "Technology" })
     .sort("-date")
     .limit(1);
+
   const businessEvent = await Event.find({ category: "Business" })
     .sort("-date")
     .limit(1);
@@ -396,13 +396,23 @@ const getEventByCategoryRight = asyncHandler(async (req, res) => {
 const getEventById = asyncHandler(async (req, res) => {
   const { eid } = req.params;
 
-  const response = await Event.findById(eid).populate("speaker", "name");
+  const response = await Event.findById(eid)
+    .populate("speaker", "name")
+    .populate({
+      path: "feedback.userId",
+      select: "name", // Chỉ lấy tên user comment
+    })
+    .populate({
+      path: "feedback.replies.adminId",
+      select: "name", // Lấy tên admin đã phản hồi
+    });
 
   return res.status(200).json({
     success: response ? true : false,
     mess: response ? response : "Can not found Event!!!",
   });
 });
+
 
 const getEventByCategoryName = asyncHandler(async (req, res) => {
   const { category } = req.query;
@@ -461,60 +471,69 @@ const getEventByCategoryName = asyncHandler(async (req, res) => {
 //   });
 // });
 const getHotestEvent = asyncHandler(async (req, res) => {
-  // Tính toán ngày 3 ngày trước
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  
-  // Sử dụng aggregation để tìm sự kiện có nhiều người đăng ký nhất trong 3 ngày qua
-  const hotestEvent = await User.aggregate([
-    // Tách mảng eventsAttended thành các document riêng biệt
+
+  let hotestEvent = await User.aggregate([
     { $unwind: "$eventsAttended" },
-    
-    // Lọc chỉ lấy các đăng ký trong 3 ngày gần nhất
-    { 
-      $match: { 
+    {
+      $match: {
         "eventsAttended.registeredAt": { $gte: threeDaysAgo },
-        "eventsAttended.status": { $in: ["pending", "confirmed"] }
-      } 
+        "eventsAttended.status": { $in: ["pending", "confirmed"] },
+      },
     },
-    
-    // // Nhóm theo sự kiện và đếm số lượng người đăng ký
-    { 
-      $group: { 
-        _id: "$eventsAttended.event", 
+    {
+      $group: {
+        _id: "$eventsAttended.event",
         registrationCount: { $sum: 1 },
-        // Lưu danh sách người đăng ký để tham khảo nếu cần
-        users: { $push: { userId: "$_id", name: "$name", email: "$email" } }
-      } 
+        users: { $push: { userId: "$_id", name: "$name", email: "$email" } },
+      },
     },
-    // Sắp xếp theo số lượng đăng ký giảm dần
     { $sort: { registrationCount: -1 } },
-    // Chỉ lấy sự kiện hot nhất (top 1)
-    { $limit: 1 }
+    { $limit: 1 },
   ]);
-  
-  
-  // // Nếu không có sự kiện nào được tìm thấy
-  if (!hotestEvent || hotestEvent.length === 0) {
-    return res.status(404).json({
-      success: false,
-      mess: "No hot events found in the last 3 days"
+
+  // Nếu không có sự kiện nào trong 3 ngày qua, lấy sự kiện có lượt đăng ký nhiều nhất từ trước đến nay
+  if (!hotestEvent.length) {
+    hotestEvent = await User.aggregate([
+      { $unwind: "$eventsAttended" },
+      {
+        $match: {
+          "eventsAttended.status": { $in: ["pending", "confirmed"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$eventsAttended.event",
+          registrationCount: { $sum: 1 },
+          users: { $push: { userId: "$_id", name: "$name", email: "$email" } },
+        },
+      },
+      { $sort: { registrationCount: -1 } },
+      { $limit: 1 },
+    ]);
+  }
+
+  // Nếu vẫn không có sự kiện nào, trả về null
+  if (!hotestEvent.length) {
+    return res.status(200).json({
+      success: true,
+      mess: "No event data available",
+      data: null,
     });
   }
-  
-  // Lấy thông tin chi tiết của sự kiện hot nhất
+
   const eventDetail = await Event.findById(hotestEvent[0]._id)
     .populate("organizer", "name email")
     .populate("speaker");
-  
+
   if (!eventDetail) {
     return res.status(404).json({
       success: false,
-      mess: "Event not found"
+      mess: "Event not found",
     });
   }
-  
-  // Trả về kết quả
+
   return res.status(200).json({
     success: true,
     mess: "Hotest event found successfully",
@@ -532,13 +551,187 @@ const getHotestEvent = asyncHandler(async (req, res) => {
         backgroundImage: eventDetail.backgroundImage,
         logoImage: eventDetail.logoImage,
         organizer: eventDetail.organizer,
-        speaker: eventDetail.speaker
+        speaker: eventDetail.speaker,
       },
       registrationCount: hotestEvent[0].registrationCount,
-      recentRegistrations: hotestEvent[0].users.slice(0, 5) // Chỉ trả về 5 người đăng ký gần nhất để minh họa
-    }
+      recentRegistrations: hotestEvent[0].users.slice(0, 5),
+    },
   });
 });
+
+const feedbackComment = asyncHandler(async (req, res) => {
+  const { eventId, comment } = req.body;
+  const userId = req.user._id;
+
+  if (!comment) {
+    return res.status(400).json({ message: "Bình luận không được để trống!" });
+  }
+
+  const event = await Event.findById(eventId);
+  if (!event) {
+    return res.status(404).json({ message: "Sự kiện không tồn tại!" });
+  }
+
+  const now = new Date();
+  if (event.date > now) {
+    return res
+      .status(400)
+      .json({ message: "Sự kiện chưa diễn ra, không thể bình luận!" });
+  }
+
+  // Thêm feedback vào User
+  await User.updateOne(
+    { _id: userId, "eventsAttended.event": eventId },
+    {
+      $push: {
+        "eventsAttended.$.feedbacks": {
+          comment,
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
+    }
+  );
+
+  // Thêm feedback vào Event
+  const updatedEvent = await Event.findByIdAndUpdate(
+    eventId,
+    {
+      $push: {
+        feedback: {
+          userId,
+          feedbackComment: comment,
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
+    },
+    { new: true }
+  ).populate("feedback.userId", "name email"); // Lấy thông tin người dùng
+
+  res.status(200).json({
+    success: true,
+    message: "Feedback đã được lưu thành công!",
+    event: updatedEvent, // Trả về event mới nhất
+  });
+});
+
+const replyFeedbackComment = asyncHandler(async (req, res) => {
+  try {
+    const {eventId,feedbackId, replyComment } = req.body;
+
+    // console.log(eventId,feedbackId, replyComment);
+    const { _id } = req.user;
+    if (!replyComment) {
+      return res.status(400).json({ message: "Reply comment is required" });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const feedback = event.feedback.id(feedbackId);
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    // Add reply
+    feedback.replies.push({
+      adminId: _id,
+      replyComment,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await event.save();
+
+    res.status(200).json({ message: "Reply added successfully", feedback });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+
+const updateFeedback = asyncHandler(async (req, res) => {
+  try {
+    const { eventId, feedbackId, feedbackComment } = req.body;
+    const userId = req.user._id;
+
+    if (!feedbackComment) {
+      return res.status(400).json({ message: "Feedback comment is required" });
+    }
+
+    // Tìm Event chứa feedback
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Tìm feedback trong Event
+    const feedbackIndex = event.feedback.findIndex((fb) => fb._id.toString() === feedbackId);
+    if (feedbackIndex === -1) {
+      return res.status(404).json({ message: "Feedback not found in event" });
+    }
+
+    const feedback = event.feedback[feedbackIndex];
+
+    // Kiểm tra quyền sở hữu
+    if (feedback.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to modify this feedback" });
+    }
+
+    // Cập nhật feedback trong Event
+    feedback.feedbackComment = feedbackComment;
+    feedback.updatedAt = new Date();
+
+    // Lưu thay đổi vào DB
+    await event.save();
+
+    res.status(200).json({ message: "Feedback updated successfully", feedback });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+
+const deleteFeedback = asyncHandler(async (req, res) => {
+  try {
+    const { eventId, feedbackId } = req.body;
+    const userId = req.user._id;
+
+    // Tìm Event chứa feedback
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Tìm feedback trong Event
+    const feedbackIndex = event.feedback.findIndex((fb) => fb._id.toString() === feedbackId);
+    if (feedbackIndex === -1) {
+      return res.status(404).json({ message: "Feedback not found in event" });
+    }
+
+    const feedback = event.feedback[feedbackIndex];
+
+    // Kiểm tra quyền sở hữu
+    if (feedback.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to delete this feedback" });
+    }
+
+    // Xóa feedback khỏi mảng
+    event.feedback.splice(feedbackIndex, 1);
+
+    // Lưu thay đổi vào DB
+    await event.save();
+
+    res.status(200).json({ message: "Feedback deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
 
 module.exports = {
   createEvent,
@@ -553,6 +746,10 @@ module.exports = {
   createManyEvent,
   getEventById,
   getEventByCategoryName,
+  feedbackComment,
+  getHotestEvent,
 
-  getHotestEvent
+  replyFeedbackComment,
+  deleteFeedback,
+  updateFeedback
 };

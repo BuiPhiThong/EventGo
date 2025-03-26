@@ -32,6 +32,11 @@ router.get("/:eid", ctrls.getEventById);
 
 router.post("/insertmany", [verifyToken, isAdmin], ctrls.createManyEvent);
 
+router.post('/feedbackuser',[verifyToken],ctrls.feedbackComment)
+router.post('/replyfeedbackuser',[verifyToken,isAdmin],ctrls.replyFeedbackComment)
+router.post('/updatefeedbackuser',[verifyToken],ctrls.updateFeedback)
+router.post('/deletefeedbackuser',[verifyToken],ctrls.deleteFeedback)
+
 router.put("/updevent",uploader.fields([
   { name: 'logoImage', maxCount: 1 },
   { name: 'backgroundImage', maxCount: 1 }

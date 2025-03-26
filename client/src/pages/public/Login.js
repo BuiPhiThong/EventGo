@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import styles from "./Login.module.css";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiLogin, apiRegistation } from "../../apis/authen/authentication";
 import swal from "sweetalert";
 const Login = () => {
   const [activeForm, setActiveForm] = useState("login");
   const navigate = useNavigate();
-
+  const location = useLocation()
+  const detailEventId= location?.state?.eid || null
+  
+  
   const [formLogin, setFormLogin] = useState({
     email: "",
     password: "",
@@ -46,7 +49,7 @@ const Login = () => {
       if (response?.success) {
         swal("SUCCESS", "Login Successfully!!!", "success");
         if (response?.userData?.role === "User") {
-          navigate("/");
+          detailEventId?navigate(`/detailevent/${detailEventId}`):navigate('/');
           localStorage.setItem(
             "authData",
             JSON.stringify({
