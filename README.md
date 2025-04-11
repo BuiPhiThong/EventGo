@@ -1,4 +1,5 @@
-Website Quản Lý Sự Kiện – "EventMaster"
+Website Quản Lý Sự Kiện – "Event Go"
+
 Công nghệ sử dụng: HTML, ReactJS, JavaScript, NodeJS, ExpressJS, MongoDB (Mongoose)
 
 Phát triển hệ thống quản lý sự kiện trực tuyến "EventMaster" với các chức năng chính như:
